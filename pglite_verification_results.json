@@ -1,0 +1,324 @@
+{
+  "summary": {
+    "total": 45,
+    "pass": 45,
+    "fail": 0
+  },
+  "results": [
+    {
+      "id": "H4-1",
+      "description": "Migration 001 applies cleanly to empty database",
+      "expected": "No errors",
+      "actual": "Applied successfully",
+      "passed": true
+    },
+    {
+      "id": "TEL-1",
+      "description": "Migration 002 Telemetry applies cleanly",
+      "expected": "No errors",
+      "actual": "Applied successfully",
+      "passed": true
+    },
+    {
+      "id": "H4-table-profiles",
+      "description": "Table public.profiles exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-table-shops",
+      "description": "Table public.shops exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-table-categories",
+      "description": "Table public.categories exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-table-products",
+      "description": "Table public.products exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-table-conversations",
+      "description": "Table public.conversations exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-table-messages",
+      "description": "Table public.messages exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-table-reports",
+      "description": "Table public.reports exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-table-survey_responses",
+      "description": "Table public.survey_responses exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-table-ai_insights",
+      "description": "Table public.ai_insights exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-table-analysis_runs",
+      "description": "Table public.analysis_runs exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-table-analytics_events",
+      "description": "Table public.analytics_events exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-view-public_profiles",
+      "description": "View public.public_profiles exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-view-no-phone",
+      "description": "public_profiles view excludes phone column",
+      "expected": "phone absent",
+      "actual": "phone absent",
+      "passed": true
+    },
+    {
+      "id": "H4-view-has-expected",
+      "description": "public_profiles view includes public fields",
+      "expected": "id,full_name,avatar_url,location,is_verified,created_at",
+      "actual": "id,full_name,avatar_url,location,is_verified,created_at",
+      "passed": true
+    },
+    {
+      "id": "H4-rls-profiles",
+      "description": "RLS enabled on public.profiles",
+      "expected": "enabled",
+      "actual": "enabled",
+      "passed": true
+    },
+    {
+      "id": "H4-rls-shops",
+      "description": "RLS enabled on public.shops",
+      "expected": "enabled",
+      "actual": "enabled",
+      "passed": true
+    },
+    {
+      "id": "H4-rls-categories",
+      "description": "RLS enabled on public.categories",
+      "expected": "enabled",
+      "actual": "enabled",
+      "passed": true
+    },
+    {
+      "id": "H4-rls-products",
+      "description": "RLS enabled on public.products",
+      "expected": "enabled",
+      "actual": "enabled",
+      "passed": true
+    },
+    {
+      "id": "H4-rls-conversations",
+      "description": "RLS enabled on public.conversations",
+      "expected": "enabled",
+      "actual": "enabled",
+      "passed": true
+    },
+    {
+      "id": "H4-rls-messages",
+      "description": "RLS enabled on public.messages",
+      "expected": "enabled",
+      "actual": "enabled",
+      "passed": true
+    },
+    {
+      "id": "H4-rls-reports",
+      "description": "RLS enabled on public.reports",
+      "expected": "enabled",
+      "actual": "enabled",
+      "passed": true
+    },
+    {
+      "id": "H4-rls-survey_responses",
+      "description": "RLS enabled on public.survey_responses",
+      "expected": "enabled",
+      "actual": "enabled",
+      "passed": true
+    },
+    {
+      "id": "H4-rls-ai_insights",
+      "description": "RLS enabled on public.ai_insights",
+      "expected": "enabled",
+      "actual": "enabled",
+      "passed": true
+    },
+    {
+      "id": "H4-fn-handle_new_user",
+      "description": "Function handle_new_user() exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-fn-verify_conversation_seller",
+      "description": "Function verify_conversation_seller() exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-trig-on_auth_user_created",
+      "description": "Trigger on_auth_user_created exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-trig-verify_conversation_seller",
+      "description": "Trigger trg_verify_conversation_seller exists",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H4-nn-product_id",
+      "description": "conversations.product_id is NOT NULL",
+      "expected": "NO",
+      "actual": "NO",
+      "passed": true
+    },
+    {
+      "id": "H4-policies-count",
+      "description": "At least 10 RLS policies created",
+      "expected": ">=10",
+      "actual": "18",
+      "passed": true
+    },
+    {
+      "id": "M2-1",
+      "description": "Trigger auto-creates profile on auth.users INSERT",
+      "expected": "2 profiles auto-created",
+      "actual": "2 profiles created",
+      "passed": true
+    },
+    {
+      "id": "M2-2",
+      "description": "Profile ID matches auth user ID",
+      "expected": "468f6540-0492-4a6a-baf2-b1744f3a3604",
+      "actual": "468f6540-0492-4a6a-baf2-b1744f3a3604",
+      "passed": true
+    },
+    {
+      "id": "M2-3",
+      "description": "Profile phone matches auth phone",
+      "expected": "+2348011111111",
+      "actual": "+2348011111111",
+      "passed": true
+    },
+    {
+      "id": "M2-4",
+      "description": "Profile full_name defaults from raw_user_meta_data",
+      "expected": "Student Alpha",
+      "actual": "Student Alpha",
+      "passed": true
+    },
+    {
+      "id": "M2-5",
+      "description": "Profile location defaults to Enugu",
+      "expected": "Enugu",
+      "actual": "Enugu",
+      "passed": true
+    },
+    {
+      "id": "M2-6",
+      "description": "Duplicate auth user insert does not duplicate profile",
+      "expected": "1 profile row",
+      "actual": "1 profile rows",
+      "passed": true
+    },
+    {
+      "id": "H3-A-view-query",
+      "description": "Querying public_profiles view returns public fields",
+      "expected": "id, full_name, avatar_url, location, is_verified, created_at",
+      "actual": "id,full_name,avatar_url,location,is_verified,created_at",
+      "passed": true
+    },
+    {
+      "id": "H3-B-view-phone-absent",
+      "description": "Querying public_profiles view does NOT return phone",
+      "expected": "phone undefined",
+      "actual": "undefined",
+      "passed": true
+    },
+    {
+      "id": "H3-C-policy-own-profile",
+      "description": "Policy \"Users read own profile\" exists on profiles",
+      "expected": "exists",
+      "actual": "exists",
+      "passed": true
+    },
+    {
+      "id": "H3-D-no-public-read-profiles",
+      "description": "No public SELECT policy exists on profiles table",
+      "expected": "0 public policies",
+      "actual": "0",
+      "passed": true
+    },
+    {
+      "id": "M1-A",
+      "description": "INSERT conversation with product_id=NULL fails (rejected by trigger/constraint)",
+      "expected": "Rejection Error",
+      "actual": "Invalid conversation: seller_id does not own the product shop.",
+      "passed": true
+    },
+    {
+      "id": "M1-B",
+      "description": "INSERT conversation with wrong seller_id rejected by trigger",
+      "expected": "Trigger EXCEPTION: seller_id does not own shop",
+      "actual": "Invalid conversation: seller_id does not own the product shop.",
+      "passed": true
+    },
+    {
+      "id": "M1-C",
+      "description": "INSERT conversation with legitimate owner succeeds",
+      "expected": "SUCCESS",
+      "actual": "Inserted ID=e3a078de...",
+      "passed": true
+    },
+    {
+      "id": "M1-D",
+      "description": "UPDATE conversation seller_id to wrong seller rejected by trigger",
+      "expected": "Trigger EXCEPTION on UPDATE",
+      "actual": "Invalid conversation: seller_id does not own the product shop.",
+      "passed": true
+    }
+  ]
+}

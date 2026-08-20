@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enugu Buy & Sell — Master Project Dossier & PRD</title>
+    <style>
+        :root {
+            --primary: #16a34a;
+            --accent: #f97316;
+            --ai-color: #8b5cf6;
+            --dark: #09090f;
+            --card-bg: #13131f;
+            --text: #f3f4f6;
+            --muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--dark);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 40px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1, h2, h3, h4 { color: #ffffff; margin-top: 1.5em; }
+        h1 {
+            font-size: 2.6rem;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 12px;
+            color: var(--primary);
+        }
+        h2 {
+            font-size: 1.7rem;
+            color: var(--accent);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        h3 { font-size: 1.25rem; color: #a7f3d0; }
+        .badge {
+            display: inline-block;
+            background: rgba(22, 163, 74, 0.2);
+            color: var(--primary);
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .img-container {
+            margin: 30px 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            text-align: center;
+        }
+        .img-container img { width: 100%; height: auto; display: block; }
+        .img-caption {
+            padding: 12px;
+            font-size: 0.85rem;
+            color: var(--muted);
+            background: rgba(0,0,0,0.4);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: var(--primary);
+        }
+        .quote-box {
+            background: rgba(249, 115, 22, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 16px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-style: italic;
+        }
+        .pillar-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+            padding-top: 25px;
+        }
+        @media print {
+            body { background: white; color: black; }
+            h1, h2, h3, th { color: black; }
+            .pillar-card, .quote-box { background: #f5f5f5; border-color: #ccc; }
+        }
+    </style>
+</head>
+<body>
+
+    <span class="badge">OFFICIAL MASTER DOSSIER — VERSION 2.0</span>
+    <h1>Enugu Buy & Sell: "The Super App"</h1>
+    <p><strong>Master Product Requirement Document (PRD), Architecture Blueprint & Strategy Guide</strong></p>
+    <p><em>Target Launch: 6-Week Phased Rollout • Primary Campus: UNEC Enugu</em></p>
+
+    <div class="img-container">
+        <img src="superapp_ui_mockup_1786640744347.jpg" alt="Super App UI Concept">
+        <div class="img-caption">Visual Concept: Student Digital Storefront, Live Engagement Badge, and Shoppers One Service Banner</div>
+    </div>
+
+    <h2>1. Executive Summary & Product Vision</h2>
+    <p><strong>Enugu Buy & Sell</strong> is an AI-powered, social-first <strong>Student Super App & Business Engine</strong> designed specifically for university campuses, launching first at the <strong>University of Nigeria, Enugu Campus (UNEC)</strong>.</p>
+    <p>Rather than building a traditional, static classifieds site (which suffers from low engagement and high scam rates), Enugu Buy & Sell combines 5 core engines:</p>
+    <ul>
+        <li><strong>High-Frequency Daily Utility:</strong> Food & grocery ordering from popular local vendors (Crunches, OpenSharaton).</li>
+        <li><strong>Student Earning Opportunities:</strong> Digital storefronts for student businesses & the "Shoppers One" personal errand network.</li>
+        <li><strong>Addictive Social Validation:</strong> Live view counters, likes, and love reactions to drive daily seller retention.</li>
+        <li><strong>Embedded AI Intelligence:</strong> Instant flyer generation and automated copywriter tools via Google Gemini API.</li>
+        <li><strong>Bank-Grade Escrow Security:</strong> Powered by Paystack HMAC verification and Supabase Row Level Security (RLS).</li>
+    </ul>
+
+    <h2>2. Empirical Survey Findings & Market Validation</h2>
+    <p>Our strategy is grounded in real empirical data collected directly from <strong>20 UNEC students</strong>:</p>
+
+    <div class="quote-box">
+        <strong>Student Quote on Trust:</strong> "I wish there was a business platform where students could buy and sell safely without being cheated."
+    </div>
+    <div class="quote-box">
+        <strong>Student Quote on Verification:</strong> "I wish there were a reliable platform where buyers and sellers could verify each other, make secure payments, and avoid scams."
+    </div>
+    <div class="quote-box">
+        <strong>Student Quote on Pricing & Vendor Reliability:</strong> "Prices of goods are quite exorbitant compared to other states... I wish vendors didn't delay and improved their attitude."
+    </div>
+
+    <h2>3. The 4 Core Strategic Growth Pillars</h2>
+
+    <div class="img-container">
+        <img src="roadmap_infographic_1786640776510.jpg" alt="Roadmap Infographic">
+        <div class="img-caption">Visual Phased Roadmap: Phase 1 (Thin Layer MVP), Phase 2 (Shoppers One & Payments), Phase 3 (Full Logistics)</div>
+    </div>
+
+    <div class="pillar-card">
+        <h3>Pillar 1: Zero-Budget Viral Engine (The 2004 Harvard Model)</h3>
+        <p>Facebook reached 1/3 of Harvard in 30 days without spending $1 on ads by turning users into marketers. Students get customizable digital storefronts. When they list products, they proudly share their unique shop link on WhatsApp status updates, bringing hundreds of free users daily.</p>
+    </div>
+
+    <div class="pillar-card">
+        <h3>Pillar 2: High-Frequency Daily Purchases ("Eat & Live")</h3>
+        <p>Students don't buy laptops every day, but they eat every day. Partnering with campus food spots and supermarkets ensures Daily Active Use (DAU) as students order meals and groceries continuously.</p>
+    </div>
+
+    <div class="pillar-card">
+        <h3>Pillar 3: "Shoppers One" — Personal Shopping Ecosystem</h3>
+        <p>Connecting busy university lecturers, workers, and wealthy locals who lack time for market runs with student runners looking to earn money. Students accept shopping tasks, buy items at local markets, and deliver them for an automated fee.</p>
+    </div>
+
+    <div class="pillar-card">
+        <h3>Pillar 4: Addictive Social Validation Loop (The Core MVP Hook)</h3>
+        <p>Every storefront and product listing features <strong>Live View Counters</strong> (<em>"14 students viewing now"</em>), <strong>Likes</strong>, and <strong>Love Reactions</strong>. Instant social recognition triggers the dopamine loop that keeps sellers engaged.</p>
+    </div>
+
+    <h2>4. Embedded AI Intelligence Layer (The Seller AI Copilot)</h2>
+    <p>Powered by <strong>Google Gemini API</strong>, every vendor gets a built-in AI assistant to eliminate wasted time:</p>
+    <ul>
+        <li><strong>AI Flyer Studio:</strong> Generates social-media-ready promotional graphics instantly.</li>
+        <li><strong>AI Copywriter:</strong> Writes catchy titles, persuasive sales copy, and search tags in 3 seconds.</li>
+        <li><strong>AI Smart Pricing Assistant:</strong> Analyzes past UNEC sales to suggest optimal pricing for fast sales.</li>
+        <li><strong>Background AI Scam Guard:</strong> Automatically scans product photos and text for fraud patterns before publication.</li>
+    </ul>
+
+    <h2>5. Competitive Analysis & Strategic Positioning</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Feature / Platform</th>
+                <th>Shopify / Bumpa</th>
+                <th>Jiji</th>
+                <th>Existing Campus Apps</th>
+                <th>Enugu Buy & Sell (Our App)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Model</strong></td>
+                <td>Isolated storefront link</td>
+                <td>Generic classifieds</td>
+                <td>Basic campus directory</td>
+                <td><strong>Viral Social Super-App & Business Engine</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Embedded AI Copilot</strong></td>
+                <td>❌ None</td>
+                <td>❌ None</td>
+                <td>❌ None</td>
+                <td><strong>✅ AI Flyer Studio + AI Copywriter</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Social Dopamine Loop</strong></td>
+                <td>❌ None</td>
+                <td>❌ None</td>
+                <td>❌ None</td>
+                <td><strong>✅ Live View Counters, Likes & Reactions</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Personal Shopper Network</strong></td>
+                <td>❌ None</td>
+                <td>❌ None</td>
+                <td>❌ Basic food delivery</td>
+                <td><strong>✅ "Shoppers One" Errand & Market Runners</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Traffic Source</strong></td>
+                <td>Merchant pays for ads</td>
+                <td>Search engine</td>
+                <td>Manual flyers</td>
+                <td><strong>✅ Organic Viral Shares (Zero Ad Spend)</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>6. 5-Layer Military-Grade Security Architecture</h2>
+    <ul>
+        <li><strong>Layer 1: Server-Only Key Isolation</strong> — Secret API keys run strictly inside server actions and are NEVER sent to client JavaScript.</li>
+        <li><strong>Layer 2: Supabase Row Level Security (RLS)</strong> — Users can ONLY modify database records tied to their authenticated ID.</li>
+        <li><strong>Layer 3: Paystack HMAC Verification</strong> — Webhooks are verified using cryptographic SHA512 signature matching.</li>
+        <li><strong>Layer 4: Input Validation & XSS Defense</strong> — All payloads pass Zod schema validation; Next.js auto-escapes HTML.</li>
+        <li><strong>Layer 5: Repository Hardening</strong> — Pre-commit secret scanning hooks prevent accidental credential leaks to GitHub.</li>
+    </ul>
+
+    <h2>7. Multi-Agent Task Division & 6-Week Timeline</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Agent / Tool</th>
+                <th>Role</th>
+                <th>Primary Responsibility</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Antigravity (Lead Orchestrator)</strong></td>
+                <td>System Lead</td>
+                <td>Architecture, building Next.js PWA components, route handler integration.</td>
+            </tr>
+            <tr>
+                <td><strong>Codex / Security Auditor Agent</strong></td>
+                <td>Security Specialist</td>
+                <td>Code auditing, vulnerability scans, validating RLS rules & HMAC headers.</td>
+            </tr>
+            <tr>
+                <td><strong>Cloud / Database Agent</strong></td>
+                <td>Backend Engineer</td>
+                <td>Supabase schema migrations, WebSockets real-time server, index optimization.</td>
+            </tr>
+            <tr>
+                <td><strong>Fintech / Payment Specialist</strong></td>
+                <td>Escrow Engineer</td>
+                <td>Writing Paystack payment hooks, webhook verification, multi-party payment splitting.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>8. Financial & Infrastructure Cost Structure</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Component</th>
+                <th>Provider</th>
+                <th>Cost at Launch</th>
+                <th>Cost at Scale (1,000+ Active Users)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Hosting</strong></td>
+                <td>Vercel</td>
+                <td><strong>$0 / month</strong> (Free tier)</td>
+                <td>$20 / month</td>
+            </tr>
+            <tr>
+                <td><strong>Database & Realtime</strong></td>
+                <td>Supabase</td>
+                <td><strong>$0 / month</strong> (Free tier)</td>
+                <td>$25 / month</td>
+            </tr>
+            <tr>
+                <td><strong>AI Processing</strong></td>
+                <td>Google Gemini API</td>
+                <td><strong>$0 / month</strong> (Free tier)</td>
+                <td>Based on API usage</td>
+            </tr>
+            <tr>
+                <td><strong>Payment Gateway</strong></td>
+                <td>Paystack</td>
+                <td><strong>$0 fixed</strong></td>
+                <td>~1.5% + ₦100 per transaction</td>
+            </tr>
+            <tr>
+                <td><strong>Custom Domain</strong></td>
+                <td>`enugubuysell.com`</td>
+                <td><strong>~$15 / year</strong></td>
+                <td>~$15 / year</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Enugu Buy & Sell — Master Project Dossier & Specification Document • 2026 Strategy
+    </div>
+
+</body>
+</html>

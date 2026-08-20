@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enugu Buy & Sell — Security & Multi-Agent Blueprint</title>
+    <style>
+        :root {
+            --primary: #16a34a;
+            --accent: #ef4444;
+            --dark: #09090f;
+            --card-bg: #13131f;
+            --text: #f3f4f6;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--dark);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 40px 20px;
+            max-width: 950px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 { color: #ffffff; margin-top: 1.5em; }
+        h1 {
+            font-size: 2.3rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+            color: #f87171;
+        }
+        h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+        .security-layer {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            padding: 16px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--primary);
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #9ca3af;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Enugu Buy & Sell — Security & Multi-Agent Plan</h1>
+    <p><em>6-Week Military-Grade Defense Plan & Agent Task Division</em></p>
+
+    <h2>Part 1: The 5-Layer Security Defense</h2>
+
+    <div class="security-layer">
+        <h3>1. Key Isolation & Server-Only Execution</h3>
+        <p><strong>Threat:</strong> Secret keys exposed in browser code.</p>
+        <p><strong>Defense:</strong> All secret keys (Paystack, Supabase Service Role, Gemini) are strictly executed inside Next.js Server Actions. They are NEVER exposed to client JavaScript.</p>
+    </div>
+
+    <div class="security-layer">
+        <h3>2. Supabase Row Level Security (RLS)</h3>
+        <p><strong>Threat:</strong> Malicious users tampering with database queries in browser console.</p>
+        <p><strong>Defense:</strong> Every table uses strict RLS policies. Users can ONLY modify records tied to their verified User ID (<code>auth.uid() = user_id</code>).</p>
+    </div>
+
+    <div class="security-layer">
+        <h3>3. Paystack HMAC SHA512 Webhook Verification</h3>
+        <p><strong>Threat:</strong> Hackers spoofing fake "Payment Success" notifications.</p>
+        <p><strong>Defense:</strong> Every transaction notification is verified via cryptographic HMAC SHA512 signature hash matching. Unverified payloads are rejected immediately.</p>
+    </div>
+
+    <div class="security-layer">
+        <h3>4. Zod Input Sanitization & XSS Defense</h3>
+        <p><strong>Threat:</strong> SQL Injection and Cross-Site Scripting (XSS) in store titles/chat.</p>
+        <p><strong>Defense:</strong> Every API endpoint validates payload structure with Zod schemas. Next.js auto-escapes HTML strings.</p>
+    </div>
+
+    <div class="security-layer">
+        <h3>5. Git Secrets Hardening</h3>
+        <p><strong>Threat:</strong> Accidental push of credentials to GitHub.</p>
+        <p><strong>Defense:</strong> Pre-commit secret scanning hooks and automated <code>.gitignore</code> checks.</p>
+    </div>
+
+    <h2>Part 2: 6-Week Multi-Agent Task Division</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Agent / Tool</th>
+                <th>Role</th>
+                <th>Responsibilities</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Antigravity (Lead Orchestrator)</strong></td>
+                <td>System Lead</td>
+                <td>Architecture, coordinating agents, building Next.js routes & UI.</td>
+            </tr>
+            <tr>
+                <td><strong>Codex / Security Auditor</strong></td>
+                <td>Code Auditor</td>
+                <td>Scanning code for vulnerabilities, testing RLS policies, auditing XSS risks.</td>
+            </tr>
+            <tr>
+                <td><strong>Cloud / Database Agent</strong></td>
+                <td>Backend Engineer</td>
+                <td>Supabase schema management, WebSockets setup, database indexes.</td>
+            </tr>
+            <tr>
+                <td><strong>Paystack Escrow Specialist</strong></td>
+                <td>Fintech Engineer</td>
+                <td>Paystack hooks, HMAC signature verification, multi-party payment splitting.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Enugu Buy & Sell • Security & Agent Governance Document 2026
+    </div>
+
+</body>
+</html>
