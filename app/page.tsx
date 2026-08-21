@@ -90,60 +90,65 @@ export default function Home() {
 
   return (
     <div className="text-[#111111] space-y-8">
-      {/* ── HERO SECTION ── */}
-      <section className="px-4 pt-8 pb-4 max-w-4xl mx-auto text-center space-y-6">
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-1.5 bg-[#E8F5EF] text-[#087443] px-3 py-1 rounded-full text-xs font-bold border border-[#087443]/15 shadow-xs">
-            <span>🏛️</span>
-            <span>Hyperlocal Marketplace for Enugu &amp; UNEC</span>
+      {/* ── HERO DISCOVERY ENGINE ── */}
+      <section className="px-4 pt-6 pb-2 max-w-4xl mx-auto text-center space-y-5">
+        <div className="space-y-2.5">
+          <div className="inline-flex items-center gap-1.5 bg-[#E8F5EF] text-[#087443] px-3.5 py-1 rounded-full text-xs font-bold border border-[#087443]/15 shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-[#087443] animate-pulse" />
+            <span>Enugu Campus Marketplace &amp; Storefronts</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111111] leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111111] leading-[1.15]">
             Find what you need. <br />
-            <span className="text-[#087443]">Sell what you have.</span>
+            <span className="text-[#087443]">Connect directly with campus sellers.</span>
           </h1>
-          <p className="text-[#667085] text-sm sm:text-base max-w-lg mx-auto font-normal">
-            Discover verified campus storefronts, student electronics, textbooks, and quality gear across Enugu.
+          <p className="text-[#667085] text-xs sm:text-sm max-w-md mx-auto font-normal">
+            Direct student commerce across UNEC, UNN, and Enugu. Search products, gear, and trusted student vendors.
           </p>
         </div>
 
-        {/* Functional Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="max-w-xl mx-auto relative">
-          <div className="relative flex items-center">
-            <Search className="w-4 h-4 text-[#667085] absolute left-4 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search products, shops, or categories in Enugu..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-slate-300 focus:border-[#087443] text-[#111111] text-sm rounded-xl pl-11 pr-24 py-3.5 shadow-xs focus:outline-none focus:ring-2 focus:ring-[#087443]/20 transition-all placeholder:text-[#667085]"
-            />
-            <button
-              type="submit"
-              className="absolute right-2 top-2 bottom-2 bg-[#087443] text-white px-4 rounded-lg text-xs font-bold hover:bg-[#065f37] transition-all shadow-xs"
-            >
-              Search
-            </button>
-          </div>
-        </form>
+        {/* Dominant Discovery Search Bar */}
+        <div className="max-w-2xl mx-auto space-y-2.5 pt-1">
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <div className="relative flex items-center group">
+              <Search className="w-5 h-5 text-[#087443] absolute left-4 pointer-events-none group-focus-within:scale-110 transition-transform" />
+              <input
+                type="text"
+                placeholder="What are you looking for?"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white border-2 border-slate-300 focus:border-[#087443] text-[#111111] text-sm sm:text-base rounded-2xl pl-12 pr-28 py-4 shadow-sm focus:outline-none focus:ring-4 focus:ring-[#087443]/15 transition-all placeholder:text-slate-400 font-medium"
+              />
+              <button
+                type="submit"
+                className="absolute right-2.5 top-2.5 bottom-2.5 bg-[#087443] hover:bg-[#065f37] text-white px-5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs flex items-center gap-1"
+              >
+                <span>Search</span>
+              </button>
+            </div>
+          </form>
 
-        {/* Category Discovery Pills */}
-        <div className="pt-2">
-          <CategoryPills onSelectCategory={handleCategorySelect} />
+          {/* Clickable Discovery Suggestions */}
+          <div className="flex items-center justify-center gap-1.5 flex-wrap text-xs text-[#667085]">
+            <span className="text-slate-400 text-[11px] font-medium mr-0.5">Try searching:</span>
+            {['Laptop', 'iPhone', 'Sneakers', 'Hair Stylist', 'Gas Cooker', 'Textbooks', 'Food'].map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => {
+                  trackEvent('search_suggestion_clicked', { term: item });
+                  router.push(`/browse?q=${encodeURIComponent(item)}`);
+                }}
+                className="text-[11px] font-semibold text-slate-600 bg-white hover:bg-[#E8F5EF] hover:text-[#087443] hover:border-[#087443]/30 border border-slate-200/90 px-2.5 py-0.5 rounded-full transition-all shadow-2xs"
+              >
+                {item}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <Link
-            href="/browse"
-            className="w-full sm:w-auto bg-[#087443] hover:bg-[#065f37] text-white font-bold text-sm px-8 py-3.5 rounded-xl shadow-xs transition-all text-center"
-          >
-            Explore All Listings
-          </Link>
-          <Link
-            href="/create-shop"
-            className="w-full sm:w-auto bg-white border border-slate-300 hover:border-slate-400 text-[#111111] font-semibold text-sm px-8 py-3.5 rounded-xl transition-all text-center"
-          >
-            Start Your Shop
-          </Link>
+        {/* Category Discovery Pills (Secondary Exploration) */}
+        <div className="pt-2">
+          <CategoryPills onSelectCategory={handleCategorySelect} />
         </div>
       </section>
 

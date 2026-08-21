@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { trackEvent } from '@/lib/telemetry';
 import { ProductCard } from '@/components/marketplace/ProductCard';
 import { EmptyState } from '@/components/marketplace/EmptyState';
+import { ReportModal } from '@/components/marketplace/ReportModal';
 import {
   ArrowLeft,
   Store,
@@ -12,6 +13,10 @@ import {
   CheckCircle2,
   Share2,
   Check,
+  Package,
+  Search,
+  Flag,
+  Calendar,
 } from 'lucide-react';
 
 interface ShopDetail {
@@ -21,6 +26,7 @@ interface ShopDetail {
   description: string;
   location: string;
   is_verified?: boolean;
+  created_at?: string;
   profiles?: {
     full_name: string;
     avatar_url?: string;
@@ -34,6 +40,7 @@ interface Product {
   price: number;
   condition: string;
   location: string;
+  category_id?: string;
   images?: string[];
 }
 
@@ -45,6 +52,8 @@ export default function ShopDetailPage({ params }: { params: Promise<{ slug: str
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadShop() {
@@ -98,7 +107,7 @@ export default function ShopDetailPage({ params }: { params: Promise<{ slug: str
       <div className="py-20 flex items-center justify-center p-4">
         <div className="text-center space-y-3">
           <div className="w-9 h-9 border-3 border-[#087443] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-semibold text-[#667085]">Loading store details...</p>
+          <p className="text-xs font-semibold text-[#667085]">Loading store catalog...</p>
         </div>
       </div>
     );
@@ -124,6 +133,14 @@ export default function ShopDetailPage({ params }: { params: Promise<{ slug: str
 
   const isVerified = shop.is_verified || shop.profiles?.is_verified;
 
+  // Filter products by internal storefront search
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = !searchQuery.trim() ||
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.condition.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
+  });
+
   return (
     <div className="text-[#111111] px-4 py-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -139,59 +156,97 @@ export default function ShopDetailPage({ params }: { params: Promise<{ slug: str
           </span>
         </div>
 
-        {/* Shop Profile Banner */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-7 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-[#E8F5EF] text-[#087443] font-black text-2xl flex items-center justify-center shadow-inner border border-[#087443]/15">
-                {shop.name.charAt(0)}
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl sm:text-2xl font-black text-[#111111] tracking-tight">{shop.name}</h1>
-                  {isVerified && (
-                    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold bg-[#E8F5EF] text-[#087443] px-2.5 py-0.5 rounded-md border border-[#087443]/15">
-                      <CheckCircle2 className="w-3 h-3 text-[#087443]" />
-                      <span>Verified</span>
-                    </span>
-                  )}
+        {/* Authoritative Emerald Storefront Banner */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs">
+          <div className="h-28 sm:h-36 bg-gradient-to-r from-[#053D24] via-[#087443] to-[#0A8A50] relative p-4 flex items-end">
+            <div className="absolute top-3 right-3 flex items-center gap-2">
+              <button
+                onClick={handleShareShop}
+                className="bg-white/90 hover:bg-white text-[#111111] text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-[#087443]" /> : <Share2 className="w-3.5 h-3.5 text-[#667085]" />}
+                <span>{copied ? 'Copied' : 'Share Store'}</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="px-5 pb-6 pt-0 relative space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-12 sm:-mt-14">
+              <div className="flex items-end gap-3.5">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white text-[#087443] font-black text-3xl sm:text-4xl flex items-center justify-center shadow-md border-4 border-white shrink-0">
+                  {shop.name.charAt(0)}
                 </div>
-                <p className="text-xs text-[#667085] flex items-center gap-1.5">
-                  <span>Owner: <strong>{shop.profiles?.full_name || 'Campus Merchant'}</strong></span>
-                  <span>•</span>
-                  <span className="inline-flex items-center gap-0.5">
-                    <MapPin className="w-3 h-3 text-[#087443]" />
-                    <span>{shop.location || 'Enugu'}</span>
-                  </span>
-                </p>
+                <div className="space-y-1 pb-1">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl sm:text-2xl font-black text-[#111111] tracking-tight">{shop.name}</h1>
+                    {isVerified && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold bg-[#E8F5EF] text-[#087443] px-2 py-0.5 rounded-md border border-[#087443]/15">
+                        <CheckCircle2 className="w-3 h-3 text-[#087443]" />
+                        <span>Verified Merchant</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[#667085] flex-wrap">
+                    <span className="inline-flex items-center gap-0.5">
+                      <MapPin className="w-3 h-3 text-[#087443]" />
+                      <span>{shop.location || 'Enugu'}</span>
+                    </span>
+                    <span>•</span>
+                    <span className="inline-flex items-center gap-0.5">
+                      <Package className="w-3 h-3 text-[#087443]" />
+                      <span>{products.length} Active {products.length === 1 ? 'Listing' : 'Listings'}</span>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <button
-              onClick={handleShareShop}
-              className="bg-white border border-slate-300 hover:border-slate-400 text-[#111111] text-xs font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs shrink-0 self-start sm:self-auto"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-[#087443]" /> : <Share2 className="w-3.5 h-3.5 text-[#667085]" />}
-              <span>{copied ? 'Store URL Copied!' : 'Share Store'}</span>
-            </button>
-          </div>
+            <p className="text-xs sm:text-sm text-[#344054] leading-relaxed border-t border-slate-100 pt-3">
+              {shop.description || 'Welcome to our digital storefront on Enugu Buy & Sell! Browse our active catalog below.'}
+            </p>
 
-          <p className="text-xs sm:text-sm text-[#344054] leading-relaxed border-t border-slate-100 pt-3.5">
-            {shop.description || 'Welcome to our digital storefront on Enugu Buy & Sell! Browse our products below.'}
-          </p>
+            <div className="flex items-center justify-between text-xs text-[#667085] pt-1">
+              <span className="flex items-center gap-1 text-[11px]">
+                <Calendar className="w-3 h-3 text-slate-400" />
+                <span>Merchant: <strong>{shop.profiles?.full_name || 'Student Entrepreneur'}</strong></span>
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setReportModalOpen(true)}
+                className="text-[11px] text-slate-400 hover:text-red-600 flex items-center gap-1 transition-colors"
+              >
+                <Flag className="w-3 h-3" />
+                <span>Report Storefront</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Shop Product Catalog */}
+        {/* Store Catalog Search & Items */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h2 className="text-base font-bold text-[#111111]">
-              Available Store Items ({products.length})
+              Catalog Inventory ({filteredProducts.length})
             </h2>
+
+            {products.length > 3 && (
+              <div className="relative w-full sm:w-64 flex items-center">
+                <Search className="w-3.5 h-3.5 text-[#667085] absolute left-3 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search inside this store..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-slate-300 focus:border-[#087443] text-xs text-[#111111] rounded-xl pl-8 pr-3 py-2 outline-none font-medium"
+                />
+              </div>
+            )}
           </div>
 
-          {products.length > 0 ? (
+          {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-              {products.map((p) => (
+              {filteredProducts.map((p) => (
                 <ProductCard
                   key={p.id}
                   id={p.id}
@@ -207,13 +262,27 @@ export default function ShopDetailPage({ params }: { params: Promise<{ slug: str
           ) : (
             <EmptyState
               type="products"
-              title="No active listings in this shop yet"
-              description="This campus store is setting up their catalog. Check back soon for new items!"
+              title={searchQuery ? `No items in this shop matching "${searchQuery}"` : 'Storefront Inventory is Empty'}
+              description={
+                searchQuery
+                  ? 'Try searching with different item keywords.'
+                  : 'This merchant currently has no active products listed in their catalog.'
+              }
+              actionText={searchQuery ? 'Reset Search' : 'Browse All Marketplace Items'}
+              actionHref={searchQuery ? undefined : '/browse'}
+              onActionClick={searchQuery ? () => setSearchQuery('') : undefined}
             />
           )}
         </div>
-
       </div>
+
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        targetType="seller"
+        targetId={shop.id}
+        targetName={shop.name}
+      />
     </div>
   );
 }

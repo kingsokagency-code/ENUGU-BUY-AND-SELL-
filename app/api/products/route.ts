@@ -13,25 +13,66 @@ export async function GET(request: Request) {
     const q = searchParams.get('q')?.trim() ?? '';
     const categoryId = searchParams.get('category_id') || searchParams.get('category');
     const shopId = searchParams.get('shop_id');
-    const limit = Math.min(parseInt(searchParams.get('limit') ?? '20', 10), 50);
+    const condition = searchParams.get('condition');
+    const location = searchParams.get('location');
+    const sort = searchParams.get('sort') ?? 'newest';
+    const limit = Math.min(parseInt(searchParams.get('limit') ?? '30', 10), 50);
 
     let query = supabase
       .from('products')
       .select('*, shops(id, name, slug, is_verified, location)')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(limit);
+      .eq('status', 'active');
 
     if (q) {
       query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%`);
     }
 
-    if (categoryId) {
-      query = query.eq('category_id', categoryId);
+    if (categoryId && categoryId !== 'all') {
+      // Check if categoryId is a slug or uuid
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId);
+      if (isUUID) {
+        query = query.eq('category_id', categoryId);
+      } else {
+        // Find category id from slug
+        const { data: cat } = await supabase.from('categories').select('id').eq('slug', categoryId.toLowerCase()).maybeSingle();
+        if (cat) {
+          query = query.eq('category_id', cat.id);
+        }
+      }
     }
 
     if (shopId) {
       query = query.eq('shop_id', shopId);
+    }
+
+    if (condition && condition !== 'all') {
+      query = query.ilike('condition', `%${condition}%`);
+    }
+
+    if (location && location !== 'all') {
+      query = query.ilike('location', `%${location}%`);
+    }
+
+    // Apply sorting
+    if (sort === 'price_asc') {
+      query = query.order('price', { ascending: true });
+    } else if (sort === 'price_desc') {
+      query = query.order('price', { ascending: false });
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
+
+    query = query.limit(limit);
+
+    // Also query matching shops if a search term is provided
+    let matchingShops: unknown[] = [];
+    if (q) {
+      const { data: sData } = await supabase
+        .from('shops')
+        .select('id, name, slug, description, location, is_verified')
+        .or(`name.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`)
+        .limit(4);
+      matchingShops = sData ?? [];
     }
 
     const { data: products, error } = await query;
@@ -52,12 +93,17 @@ export async function GET(request: Request) {
 
         await supabase.from('analytics_events').insert({
           event_name: 'search_results',
-          event_data: { query: q, count: productList.length },
+          event_data: { query: q, count: productList.length, matching_shops_count: matchingShops.length },
         });
       } catch {}
     }
 
-    return NextResponse.json({ success: true, count: productList.length, products: productList });
+    return NextResponse.json({
+      success: true,
+      count: productList.length,
+      products: productList,
+      matching_shops: matchingShops,
+    });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Server error';
     return NextResponse.json({ error: msg }, { status: 500 });

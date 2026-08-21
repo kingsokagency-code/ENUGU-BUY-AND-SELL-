@@ -10,6 +10,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const ownerOnly = searchParams.get('owner') === 'true';
+    const q = searchParams.get('q')?.trim() ?? '';
 
     if (ownerOnly) {
       const { data: { user }, error: authErr } = await supabase.auth.getUser();
@@ -30,11 +31,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: true, shops: userShops ?? [] });
     }
 
-    const { data: shops, error } = await supabase
+    let query = supabase
       .from('shops')
       .select('*, profiles!inner(full_name, avatar_url, is_verified)')
       .order('created_at', { ascending: false })
-      .limit(30);
+      .limit(40);
+
+    if (q) {
+      query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%,location.ilike.%${q}%`);
+    }
+
+    const { data: shops, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });

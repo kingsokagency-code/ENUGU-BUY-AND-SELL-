@@ -1,11 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { sendPhoneOtp, verifyPhoneOtp } from '@/lib/auth';
 import { ArrowLeft, Phone, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
-export default function AuthPage() {
+function AuthContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const redirectUrl = searchParams.get('redirect') || searchParams.get('returnUrl') || '/';
+
   const [step, setStep] = useState<'phone' | 'otp' | 'success'>('phone');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
@@ -48,6 +53,12 @@ export default function AuthPage() {
         setError(res.error.message);
       } else {
         setStep('success');
+        // If there's a redirect target other than root, redirect automatically after 1.5s
+        if (redirectUrl !== '/') {
+          setTimeout(() => {
+            router.push(redirectUrl);
+          }, 1500);
+        }
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Verification failed';
@@ -117,7 +128,7 @@ export default function AuthPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
-                className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl px-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-[#087443]/15 transition-all"
+                className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl px-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-[#087443]/15 transition-all font-medium"
               />
             </div>
             <button
@@ -169,13 +180,13 @@ export default function AuthPage() {
               <CheckCircle2 className="w-7 h-7 text-[#087443]" />
             </div>
             <p className="text-xs sm:text-sm text-[#667085] leading-relaxed">
-              Signed in with <strong>{phone}</strong>. You can now browse products, chat with sellers, or start your campus storefront!
+              Signed in with <strong>{phone}</strong>. You can now chat directly with sellers, explore the campus catalog, or launch your storefront!
             </p>
             <Link
-              href="/"
+              href={redirectUrl}
               className="block w-full bg-[#087443] hover:bg-[#065f37] text-white font-bold text-sm py-3.5 rounded-xl text-center shadow-xs transition-all"
             >
-              Explore Marketplace Now &rarr;
+              {redirectUrl !== '/' ? 'Continue to Listing &rarr;' : 'Explore Marketplace Now &rarr;'}
             </Link>
           </div>
         )}
@@ -183,4 +194,17 @@ export default function AuthPage() {
     </div>
   );
 }
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="py-20 flex items-center justify-center">
+        <div className="w-8 h-8 border-3 border-[#087443] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <AuthContent />
+    </Suspense>
+  );
+}
+
 

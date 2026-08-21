@@ -231,26 +231,11 @@ function CreateProductForm() {
                   />
                 </div>
 
-                {/* Price & Condition Grid */}
+                {/* Category & Condition Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-[#111111] mb-1">
-                      Price (₦) *
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 280000"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl px-3.5 py-2.5 outline-none font-bold"
-                      min="1"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[#111111] mb-1">
-                      Condition *
+                      Category *
                     </label>
                     <select
                       value={condition}
@@ -261,6 +246,22 @@ function CreateProductForm() {
                       <option value="Refurbished">Refurbished / Open Box</option>
                       <option value="New">Brand New</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#111111] mb-1">
+                      Price (₦) *
+                    </label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="e.g. 280000"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl px-3.5 py-2.5 outline-none font-bold"
+                      min="1"
+                      required
+                    />
                   </div>
                 </div>
 
@@ -295,7 +296,7 @@ function CreateProductForm() {
                 <button
                   type="submit"
                   disabled={loading || shops.length === 0}
-                  className="w-full bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3 rounded-xl shadow-xs transition-all mt-2"
+                  className="w-full bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3.5 rounded-xl shadow-xs transition-all mt-2"
                 >
                   {loading ? 'Publishing Product...' : 'Publish Product to Marketplace'}
                 </button>

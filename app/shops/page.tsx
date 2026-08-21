@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ShopCard } from '@/components/marketplace/ShopCard';
 import { ShopCardSkeleton } from '@/components/marketplace/SkeletonCard';
 import { EmptyState } from '@/components/marketplace/EmptyState';
-import { Plus, ArrowLeft } from 'lucide-react';
+import { Plus, ArrowLeft, Search, CheckCircle2, X } from 'lucide-react';
 
 interface ShopItem {
   id: string;
@@ -22,13 +22,18 @@ interface ShopItem {
 
 export default function ShopsPage() {
   const [shops, setShops] = useState<ShopItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchShops() {
       setLoading(true);
       try {
-        const res = await fetch('/api/shops');
+        const url = searchQuery
+          ? `/api/shops?q=${encodeURIComponent(searchQuery)}`
+          : '/api/shops';
+        const res = await fetch(url);
         const data = await res.json();
         setShops(data.shops ?? []);
       } catch {
@@ -38,7 +43,11 @@ export default function ShopsPage() {
       }
     }
     fetchShops();
-  }, []);
+  }, [searchQuery]);
+
+  const filteredShops = verifiedOnly
+    ? shops.filter((s) => s.is_verified || s.profiles?.is_verified)
+    : shops;
 
   return (
     <div className="text-[#111111] px-4 py-6">
@@ -53,7 +62,7 @@ export default function ShopsPage() {
             <span>Back to Home</span>
           </Link>
           <span className="text-xs font-semibold text-[#087443] bg-[#E8F5EF] px-3 py-1 rounded-full border border-[#087443]/15">
-            Campus Merchants
+            Campus Merchants ({filteredShops.length})
           </span>
         </div>
 
@@ -64,16 +73,54 @@ export default function ShopsPage() {
                 Campus &amp; Local Stores Directory
               </h1>
               <p className="text-xs sm:text-sm text-[#667085]">
-                Explore persistent digital storefronts created by UNEC student sellers and local merchants across Enugu.
+                Discover verified student businesses, tech vendors, salon stylists, and campus merchants across Enugu.
               </p>
             </div>
             <Link
               href="/create-shop"
-              className="inline-flex items-center justify-center gap-1.5 bg-[#087443] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs hover:bg-[#065f37] transition-all whitespace-nowrap self-start sm:self-auto"
+              className="inline-flex items-center justify-center gap-1.5 bg-[#087443] text-white text-xs font-bold px-5 py-3 rounded-xl shadow-xs hover:bg-[#065f37] transition-all whitespace-nowrap self-start sm:self-auto"
             >
               <Plus className="w-4 h-4" />
-              <span>Create Your Shop</span>
+              <span>Launch Storefront</span>
             </Link>
+          </div>
+
+          {/* Search & Verified Filter Bar */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              <div className="relative flex-1 flex items-center">
+                <Search className="w-4 h-4 text-[#667085] absolute left-3.5 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search stores by name, service (e.g. hair, tech, books), or campus location..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl pl-10 pr-9 py-2.5 outline-none focus:ring-2 focus:ring-[#087443]/15 transition-all font-medium"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 text-[#667085] hover:text-[#111111]"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setVerifiedOnly(!verifiedOnly)}
+                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border shrink-0 ${
+                  verifiedOnly
+                    ? 'bg-[#087443] text-white border-[#087443]'
+                    : 'bg-[#FAFAF8] text-[#344054] border-slate-300 hover:border-[#087443]'
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Verified Stores Only</span>
+              </button>
+            </div>
           </div>
 
           {loading ? (
@@ -82,9 +129,9 @@ export default function ShopsPage() {
                 <ShopCardSkeleton key={i} />
               ))}
             </div>
-          ) : shops.length > 0 ? (
+          ) : filteredShops.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {shops.map((shop) => (
+              {filteredShops.map((shop) => (
                 <ShopCard
                   key={shop.id}
                   id={shop.id}
@@ -99,10 +146,15 @@ export default function ShopsPage() {
           ) : (
             <EmptyState
               type="shops"
-              title="No Campus Stores Created Yet"
-              description="Be the first student entrepreneur or merchant to launch your storefront on Enugu Buy & Sell!"
-              actionText="+ Launch Your Storefront"
-              actionHref="/create-shop"
+              title={searchQuery ? `No stores found matching "${searchQuery}"` : 'No Campus Stores Found'}
+              description={
+                searchQuery
+                  ? 'Try searching with different keywords like "phone", "hair", or "books".'
+                  : 'Be the first student entrepreneur or merchant to launch your storefront on Enugu Buy & Sell!'
+              }
+              actionText={searchQuery ? 'Reset Search' : '+ Launch Your Storefront'}
+              actionHref={searchQuery ? undefined : '/create-shop'}
+              onActionClick={searchQuery ? () => setSearchQuery('') : undefined}
             />
           )}
         </main>
@@ -110,4 +162,5 @@ export default function ShopsPage() {
     </div>
   );
 }
+
 

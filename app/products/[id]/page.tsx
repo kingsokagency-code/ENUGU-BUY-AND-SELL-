@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { trackEvent } from '@/lib/telemetry';
+import { ReportModal } from '@/components/marketplace/ReportModal';
 import {
   ArrowLeft,
   MapPin,
@@ -13,6 +14,8 @@ import {
   AlertTriangle,
   Package,
   Check,
+  ShieldCheck,
+  Flag,
 } from 'lucide-react';
 
 interface ProductDetail {
@@ -40,6 +43,7 @@ interface ProductDetail {
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
@@ -51,8 +55,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [chatSuccess, setChatSuccess] = useState<string | null>(null);
   const [chatError, setChatError] = useState<string | null>(null);
 
-  // Share state
+  // Share state & Report Modal
   const [copied, setCopied] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   // share_landing telemetry: fire once on mount if ?ref=share is present
   useEffect(() => {
@@ -99,15 +104,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       const data = await res.json();
 
       if (res.status === 401) {
-        setChatError('Please Sign In with your phone number to message the seller.');
+        setChatError('Please sign in with your phone number to message the seller.');
       } else if (!res.ok) {
         setChatError(data.error || 'Failed to initiate conversation');
-      } else {
-        setChatSuccess(`Conversation established with ${product.shops?.name || 'Seller'}! Product context attached.`);
+      } else if (data.conversation?.id) {
         trackEvent('conversation_started', {
           product_id: product.id,
           seller_id: product.shops?.profiles?.id,
         });
+        // Route directly into the active product chat thread
+        router.push(`/conversations/${data.conversation.id}`);
       }
     } catch {
       setChatError('Connection error while initiating conversation');
@@ -172,7 +178,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const isVerified = product.shops?.is_verified || product.shops?.profiles?.is_verified;
 
   return (
-    <div className="text-[#111111] px-4 py-6">
+    <div className="text-[#111111] px-4 py-6 pb-24 md:pb-8">
       <div className="max-w-3xl mx-auto space-y-6">
         
         {/* Navigation Breadcrumb */}
@@ -182,7 +188,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <span>Back to Products</span>
           </Link>
           <span className="text-xs font-semibold text-[#087443] bg-[#E8F5EF] px-3 py-1 rounded-full border border-[#087443]/15">
-            Product Listing
+            Campus Listing
           </span>
         </div>
 
@@ -271,6 +277,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </p>
             </div>
 
+            {/* Campus Safety & Inspection Checklist Card */}
+            <div className="bg-[#FAFAF8] border border-slate-200/90 rounded-2xl p-4 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#111111]">
+                <ShieldCheck className="w-4 h-4 text-[#087443]" />
+                <span>Campus Inspection &amp; Safety Guidelines</span>
+              </div>
+              <ul className="text-xs text-[#667085] space-y-1 pl-6 list-disc">
+                <li>Meet in public campus areas (UNEC Library, SUB, Faculty buildings).</li>
+                <li>Inspect and test the item thoroughly before making payment.</li>
+                <li>Never send advance deposits or wire transfers before inspecting.</li>
+              </ul>
+            </div>
+
             {/* Action Feedback Messages */}
             {chatSuccess && (
               <div className="bg-[#E8F5EF] border border-[#087443]/30 text-[#087443] text-xs p-4 rounded-xl font-semibold flex items-center gap-2">
@@ -282,15 +301,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             {chatError && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-4 rounded-xl font-medium flex items-center justify-between gap-2">
                 <span>{chatError}</span>
-                {chatError.includes('Sign In') && (
-                  <Link href="/auth" className="bg-[#087443] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
+                {chatError.includes('sign in') && (
+                  <Link
+                    href={`/auth?redirect=/products/${product.id}`}
+                    className="bg-[#087443] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap"
+                  >
                     Sign In Now
                   </Link>
                 )}
               </div>
             )}
 
-            {/* Primary Action Buttons */}
+            {/* Primary Action Buttons (Desktop / In-Flow) */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100">
               <button
                 onClick={handleMessageSeller}
@@ -298,7 +320,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 className="flex-1 bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3.5 rounded-xl shadow-xs transition-all text-center flex items-center justify-center gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>{messaging ? 'Initiating Conversation...' : 'Message Merchant'}</span>
+                <span>{messaging ? 'Connecting to Merchant...' : 'Message Merchant'}</span>
               </button>
 
               <button
@@ -310,9 +332,49 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </button>
             </div>
 
+            {/* Report Listing Trigger */}
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setReportModalOpen(true)}
+                className="text-[11px] text-slate-400 hover:text-red-600 flex items-center gap-1 transition-colors"
+              >
+                <Flag className="w-3 h-3" />
+                <span>Report this listing</span>
+              </button>
+            </div>
+
           </div>
         </main>
       </div>
+
+      {/* Sticky Mobile Bottom Contact CTA Bar */}
+      <div className="fixed bottom-14 left-0 right-0 z-20 md:hidden bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-3 px-4 flex items-center justify-between gap-3 shadow-lg">
+        <div className="min-w-0">
+          <div className="text-xs font-bold text-[#667085] truncate">Price</div>
+          <div className="text-base font-black text-[#087443] tracking-tight">
+            ₦{Number(product.price).toLocaleString()}
+          </div>
+        </div>
+
+        <button
+          onClick={handleMessageSeller}
+          disabled={messaging}
+          className="bg-[#087443] hover:bg-[#065f37] text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0"
+        >
+          <MessageCircle className="w-3.5 h-3.5" />
+          <span>{messaging ? 'Connecting...' : 'Message Merchant'}</span>
+        </button>
+      </div>
+
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        targetType="listing"
+        targetId={product.id}
+        targetName={product.name}
+      />
     </div>
   );
 }
+
