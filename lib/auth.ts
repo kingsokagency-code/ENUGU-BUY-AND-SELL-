@@ -14,7 +14,7 @@ export interface AuthState {
 }
 
 /**
- * Send OTP verification code to student phone number
+ * Send OTP verification code to student phone number via Termii SMS Gateway
  */
 export async function sendPhoneOtp(phoneInput: string) {
   let validated: { phone: string };
@@ -33,38 +33,52 @@ export async function sendPhoneOtp(phoneInput: string) {
 
   if (isDevEnvironment) {
     console.log(`[AUTH DEV MODE] OTP Code sent to ${validated.phone}: 123456`);
-    return { data: { message: 'Dev mode OTP sent: 123456' }, error: null };
+    return { data: { message: 'Dev mode OTP sent: 123456', pinId: 'dev-pin-id' }, error: null };
   }
 
-  const { data, error } = await supabase.auth.signInWithOtp({
-    phone: validated.phone,
-  });
+  try {
+    // 1. First attempt through our dedicated Termii SMS server route
+    const res = await fetch('/api/auth/otp/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: validated.phone }),
+    });
 
-  if (error) {
-    const errorMsg = error.message.toLowerCase();
-    const errorStatus = 'status' in error ? (error as { status?: number }).status : undefined;
-    const errorCode = 'code' in error ? (error as { code?: string }).code : undefined;
-    let friendlyMessage = "We couldn't send your verification code. Please check your number and try again.";
+    const data = await res.json();
 
-    if (errorMsg.includes('rate limit') || errorMsg.includes('too many requests') || errorStatus === 429) {
-      friendlyMessage = 'Too many attempts. Please wait a few minutes and try again.';
-    } else if (errorMsg.includes('provider') || errorCode === 'phone_provider_disabled') {
-      friendlyMessage = 'SMS verification is currently being configured for this network. Please try again shortly or contact support.';
-    } else if (errorMsg.includes('invalid') && errorMsg.includes('phone')) {
-      friendlyMessage = 'Please enter a valid Nigerian phone number.';
+    if (res.ok && data.success) {
+      // Save pinId in session storage for verification step
+      if (typeof window !== 'undefined' && data.pinId) {
+        sessionStorage.setItem('ebs_auth_pin_id', data.pinId);
+        sessionStorage.setItem('ebs_auth_phone', validated.phone);
+      }
+      return { data, error: null };
+    }
+
+    // 2. Fallback to Supabase native signInWithOtp if custom route is unavailable
+    if (res.status === 404) {
+      const { data: sbData, error: sbError } = await supabase.auth.signInWithOtp({
+        phone: validated.phone,
+      });
+      if (sbError) throw sbError;
+      return { data: sbData, error: null };
     }
 
     return {
       data: null,
-      error: { message: friendlyMessage },
+      error: { message: data.error || "We couldn't send your verification code. Please check your number and try again." },
+    };
+  } catch (err: unknown) {
+    console.error('[AUTH] sendPhoneOtp exception:', err);
+    return {
+      data: null,
+      error: { message: "We couldn't send your verification code. Please check your number and try again." },
     };
   }
-
-  return { data, error: null };
 }
 
 /**
- * Verify OTP code entered by user
+ * Verify OTP code entered by user & establish Supabase session
  */
 export async function verifyPhoneOtp(phoneInput: string, tokenInput: string) {
   let validated: { phone: string; token: string };
@@ -86,31 +100,62 @@ export async function verifyPhoneOtp(phoneInput: string, tokenInput: string) {
     return { data: { user: { id: 'dev-user-id', phone: validated.phone } as unknown as User }, error: null };
   }
 
-  // Production Auth Execution
-  const { data, error } = await supabase.auth.verifyOtp({
-    phone: validated.phone,
-    token: validated.token,
-    type: 'sms',
-  });
+  try {
+    const pinId = typeof window !== 'undefined' ? sessionStorage.getItem('ebs_auth_pin_id') : null;
 
-  if (error) {
-    const errorMsg = error.message.toLowerCase();
-    const errorStatus = 'status' in error ? (error as { status?: number }).status : undefined;
-    let friendlyMessage = 'Verification code is invalid or has expired. Please check and try again.';
+    // 1. Verify through our Termii verification route
+    const res = await fetch('/api/auth/otp/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: validated.phone,
+        token: validated.token,
+        pinId: pinId || undefined,
+      }),
+    });
 
-    if (errorMsg.includes('rate limit') || errorMsg.includes('too many requests') || errorStatus === 429) {
-      friendlyMessage = 'Too many attempts. Please wait a few minutes and try again.';
-    } else if (errorMsg.includes('expired')) {
-      friendlyMessage = 'Verification code has expired. Please request a new code.';
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      // If a magic link tokenHash is returned, verify it with the client Supabase instance to set session cookies
+      if (data.tokenHash) {
+        await supabase.auth.verifyOtp({
+          token_hash: data.tokenHash,
+          type: 'magiclink',
+        });
+      }
+
+      // Cleanup session storage
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('ebs_auth_pin_id');
+        sessionStorage.removeItem('ebs_auth_phone');
+      }
+
+      return { data, error: null };
+    }
+
+    // 2. Fallback to Supabase verifyOtp if custom route is unavailable
+    if (res.status === 404) {
+      const { data: sbData, error: sbError } = await supabase.auth.verifyOtp({
+        phone: validated.phone,
+        token: validated.token,
+        type: 'sms',
+      });
+      if (sbError) throw sbError;
+      return { data: sbData, error: null };
     }
 
     return {
       data: null,
-      error: { message: friendlyMessage },
+      error: { message: data.error || 'Verification code is invalid or has expired.' },
+    };
+  } catch (err: unknown) {
+    console.error('[AUTH] verifyPhoneOtp exception:', err);
+    return {
+      data: null,
+      error: { message: 'Verification code is invalid or has expired. Please try again.' },
     };
   }
-
-  return { data, error: null };
 }
 
 /**
