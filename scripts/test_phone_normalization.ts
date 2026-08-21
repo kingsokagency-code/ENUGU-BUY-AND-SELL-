@@ -2,6 +2,9 @@ import { normalizeNigerianPhone } from '../lib/validations/phone';
 
 const testCases = [
   { input: '08012345678', expected: '+2348012345678', shouldPass: true },
+  { input: '08123456789', expected: '+2348123456789', shouldPass: true },
+  { input: '8123456789', expected: '+2348123456789', shouldPass: true },
+  { input: '+2348123456789', expected: '+2348123456789', shouldPass: true },
   { input: '8012345678', expected: '+2348012345678', shouldPass: true },
   { input: '2348012345678', expected: '+2348012345678', shouldPass: true },
   { input: '+2348012345678', expected: '+2348012345678', shouldPass: true },

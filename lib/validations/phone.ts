@@ -66,15 +66,15 @@ export function normalizeNigerianPhone(input: string | null | undefined): PhoneN
 
   let local10Digits = '';
 
-  // Case 1: Starts with 234 (13 digits total) -> e.g. 2348012345678
+  // Case 1: Starts with 234 followed by 10 digits (13 digits total) -> e.g. 2348012345678 or 2348123456789
   if (sanitized.startsWith('234') && sanitized.length === 13) {
     local10Digits = sanitized.slice(3);
   }
-  // Case 2: Starts with 0 (11 digits total) -> e.g. 08012345678
+  // Case 2: Starts with 0 followed by 10 digits (11 digits total) -> e.g. 08012345678 or 08123456789
   else if (sanitized.startsWith('0') && sanitized.length === 11) {
     local10Digits = sanitized.slice(1);
   }
-  // Case 3: 10 digits without leading 0 -> e.g. 8012345678
+  // Case 3: 10 digits without leading 0 -> e.g. 8012345678 or 8123456789
   else if (sanitized.length === 10) {
     local10Digits = sanitized;
   }
@@ -86,9 +86,10 @@ export function normalizeNigerianPhone(input: string | null | undefined): PhoneN
     };
   }
 
-  // Validate that the 10-digit number starts with a valid Nigerian mobile prefix (70, 80, 81, 90, 91)
+  // Validate that the 10-digit number starts with a valid Nigerian mobile prefix (70, 71, 80, 81, 90, 91)
   const prefix2 = local10Digits.slice(0, 2);
-  if (!NIGERIAN_PHONE_PREFIXES.includes(prefix2)) {
+  const VALID_PREFIXES = ['70', '71', '80', '81', '90', '91'];
+  if (!VALID_PREFIXES.includes(prefix2)) {
     return {
       isValid: false,
       canonicalPhone: null,
