@@ -40,7 +40,27 @@ export async function sendPhoneOtp(phoneInput: string) {
     phone: validated.phone,
   });
 
-  return { data, error };
+  if (error) {
+    const errorMsg = error.message.toLowerCase();
+    const errorStatus = 'status' in error ? (error as { status?: number }).status : undefined;
+    const errorCode = 'code' in error ? (error as { code?: string }).code : undefined;
+    let friendlyMessage = "We couldn't send your verification code. Please check your number and try again.";
+
+    if (errorMsg.includes('rate limit') || errorMsg.includes('too many requests') || errorStatus === 429) {
+      friendlyMessage = 'Too many attempts. Please wait a few minutes and try again.';
+    } else if (errorMsg.includes('provider') || errorCode === 'phone_provider_disabled') {
+      friendlyMessage = 'SMS verification is currently being configured for this network. Please try again shortly or contact support.';
+    } else if (errorMsg.includes('invalid') && errorMsg.includes('phone')) {
+      friendlyMessage = 'Please enter a valid Nigerian phone number.';
+    }
+
+    return {
+      data: null,
+      error: { message: friendlyMessage },
+    };
+  }
+
+  return { data, error: null };
 }
 
 /**
@@ -73,7 +93,24 @@ export async function verifyPhoneOtp(phoneInput: string, tokenInput: string) {
     type: 'sms',
   });
 
-  return { data, error };
+  if (error) {
+    const errorMsg = error.message.toLowerCase();
+    const errorStatus = 'status' in error ? (error as { status?: number }).status : undefined;
+    let friendlyMessage = 'Verification code is invalid or has expired. Please check and try again.';
+
+    if (errorMsg.includes('rate limit') || errorMsg.includes('too many requests') || errorStatus === 429) {
+      friendlyMessage = 'Too many attempts. Please wait a few minutes and try again.';
+    } else if (errorMsg.includes('expired')) {
+      friendlyMessage = 'Verification code has expired. Please request a new code.';
+    }
+
+    return {
+      data: null,
+      error: { message: friendlyMessage },
+    };
+  }
+
+  return { data, error: null };
 }
 
 /**
