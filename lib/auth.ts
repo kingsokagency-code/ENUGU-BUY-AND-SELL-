@@ -17,7 +17,16 @@ export interface AuthState {
  * Send OTP verification code to student phone number
  */
 export async function sendPhoneOtp(phoneInput: string) {
-  const validated = phoneAuthSchema.parse({ phone: phoneInput });
+  let validated: { phone: string };
+  try {
+    validated = phoneAuthSchema.parse({ phone: phoneInput });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Please enter a valid Nigerian phone number.';
+    return {
+      data: null,
+      error: { message: message.includes('ZodError') ? 'Please enter a valid Nigerian phone number.' : message },
+    };
+  }
 
   // Dev bypass ONLY allowed in explicit non-production NODE_ENV
   const isDevEnvironment = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_SMS_DEV_MODE === 'true';
@@ -38,7 +47,16 @@ export async function sendPhoneOtp(phoneInput: string) {
  * Verify OTP code entered by user
  */
 export async function verifyPhoneOtp(phoneInput: string, tokenInput: string) {
-  const validated = otpVerifySchema.parse({ phone: phoneInput, token: tokenInput });
+  let validated: { phone: string; token: string };
+  try {
+    validated = otpVerifySchema.parse({ phone: phoneInput, token: tokenInput });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Please enter a valid Nigerian phone number.';
+    return {
+      data: null,
+      error: { message: message.includes('ZodError') ? 'Please enter a valid Nigerian phone number.' : message },
+    };
+  }
 
   // Dev bypass ONLY allowed in explicit non-production NODE_ENV
   const isDevEnvironment = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_SMS_DEV_MODE === 'true';

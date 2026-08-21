@@ -1,15 +1,28 @@
 import { z } from 'zod';
+import { normalizeNigerianPhone } from './phone';
 
 export const phoneAuthSchema = z.object({
   phone: z
     .string()
-    .min(10, 'Phone number must be at least 10 digits')
-    .max(15, 'Phone number is too long')
-    .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format. Include country code e.g. +2348012345678'),
+    .transform((val) => {
+      const result = normalizeNigerianPhone(val);
+      if (!result.isValid || !result.canonicalPhone) {
+        throw new Error('Please enter a valid Nigerian phone number.');
+      }
+      return result.canonicalPhone;
+    }),
 });
 
 export const otpVerifySchema = z.object({
-  phone: z.string().min(10),
+  phone: z
+    .string()
+    .transform((val) => {
+      const result = normalizeNigerianPhone(val);
+      if (!result.isValid || !result.canonicalPhone) {
+        throw new Error('Please enter a valid Nigerian phone number.');
+      }
+      return result.canonicalPhone;
+    }),
   token: z.string().length(6, 'Verification code must be 6 digits'),
 });
 
@@ -22,3 +35,4 @@ export const profileUpdateSchema = z.object({
 export type PhoneAuthInput = z.infer<typeof phoneAuthSchema>;
 export type OtpVerifyInput = z.infer<typeof otpVerifySchema>;
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+

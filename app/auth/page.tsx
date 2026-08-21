@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { sendPhoneOtp, verifyPhoneOtp } from '@/lib/auth';
+import { normalizeNigerianPhone } from '@/lib/validations/phone';
 import { ArrowLeft, Phone, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 function AuthContent() {
@@ -21,13 +22,28 @@ function AuthContent() {
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const norm = normalizeNigerianPhone(phone);
+    if (!norm.isValid || !norm.canonicalPhone) {
+      setError(norm.error || 'Please enter a valid Nigerian phone number.');
+      return;
+    }
+
+    const canonical = norm.canonicalPhone;
     setLoading(true);
 
     try {
-      const res = await sendPhoneOtp(phone);
+      const res = await sendPhoneOtp(canonical);
       if (res.error) {
-        setError(res.error.message);
+        // Map any technical error string to a friendly human message
+        const msg = res.error.message;
+        if (msg.includes('ZodError') || msg.includes('regex') || msg.includes('format') || msg.includes('pattern')) {
+          setError('Please enter a valid Nigerian phone number.');
+        } else {
+          setError(msg);
+        }
       } else {
+        setPhone(canonical);
         const dataObj = res.data as Record<string, unknown> | null;
         if (dataObj?.message && typeof dataObj.message === 'string' && dataObj.message.includes('Dev mode')) {
           setDevNotice('Development Mode Active: Use verification code 123456');
@@ -36,7 +52,11 @@ function AuthContent() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to send verification code';
-      setError(msg);
+      if (msg.includes('ZodError') || msg.includes('regex') || msg.includes('format') || msg.includes('pattern')) {
+        setError('Please enter a valid Nigerian phone number.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -50,7 +70,12 @@ function AuthContent() {
     try {
       const res = await verifyPhoneOtp(phone, otp);
       if (res.error) {
-        setError(res.error.message);
+        const msg = res.error.message;
+        if (msg.includes('ZodError') || msg.includes('regex') || msg.includes('format') || msg.includes('pattern')) {
+          setError('Please enter a valid Nigerian phone number.');
+        } else {
+          setError(msg);
+        }
       } else {
         setStep('success');
         // If there's a redirect target other than root, redirect automatically after 1.5s
@@ -62,7 +87,11 @@ function AuthContent() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Verification failed';
-      setError(msg);
+      if (msg.includes('ZodError') || msg.includes('regex') || msg.includes('format') || msg.includes('pattern')) {
+        setError('Please enter a valid Nigerian phone number.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -119,17 +148,32 @@ function AuthContent() {
         {step === 'phone' && (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-[#111111] mb-1.5">
-                Nigerian Phone Number
-              </label>
-              <input
-                type="tel"
-                placeholder="+2348012345678"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-                className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl px-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-[#087443]/15 transition-all font-medium"
-              />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-[#111111]">
+                  Nigerian Phone Number
+                </label>
+                <span className="text-[11px] font-medium text-[#667085]">
+                  e.g. 0801 234 5678
+                </span>
+              </div>
+              <div className="relative flex items-center">
+                <div className="absolute left-3.5 flex items-center gap-1.5 pointer-events-none text-xs font-bold text-[#344054] border-r border-slate-300 pr-2.5">
+                  <span>🇳🇬</span>
+                  <span>+234</span>
+                </div>
+                <input
+                  type="tel"
+                  placeholder="08012345678 or +234..."
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  autoFocus
+                  className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl pl-24 pr-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-[#087443]/15 transition-all font-medium placeholder:text-slate-400"
+                />
+              </div>
+              <p className="mt-1.5 text-[11px] text-[#667085]">
+                Enter any standard format (080..., 80..., 234..., or +234...).
+              </p>
             </div>
             <button
               type="submit"
