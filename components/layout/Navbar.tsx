@@ -1,78 +1,231 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Plus, User } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Logo } from '@/components/brand/Logo';
+import { MobileSidebar } from '@/components/layout/MobileSidebar';
+import {
+  Search,
+  Heart,
+  ShoppingCart,
+  User,
+  ShoppingBag,
+  Menu,
+  ChevronDown,
+} from 'lucide-react';
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+
+  const categories = [
+    'All Categories',
+    'Phones & Tablets',
+    'Electronics',
+    'Fashion',
+    'Home & Kitchen',
+    'Beauty & Health',
+    'Vehicles',
+    'Property',
+  ];
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    const catQuery = selectedCategory !== 'All Categories' ? `&category=${encodeURIComponent(selectedCategory)}` : '';
+    router.push(`/browse?q=${encodeURIComponent(searchQuery.trim())}${catQuery}`);
+  };
+
+  const navLinks = [
+    { label: 'Home', href: '/' },
+    { label: 'Categories', href: '/browse' },
+    { label: 'Deals', href: '/browse?filter=deals' },
+    { label: 'Stores', href: '/shops' },
+  ];
 
   return (
-    <header className="sticky top-0 z-30 bg-[#FAFAF8]/90 backdrop-blur-md border-b border-slate-200/80 px-4 py-3">
-      <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-        {/* Brand Lockup */}
-        <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-[#087443] text-white font-black flex items-center justify-center text-sm shadow-xs group-hover:scale-105 transition-transform">
-            E
+    <>
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-2xs select-none">
+        
+        {/* ── TOP BAR: Logo, Search, Actions ── */}
+        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-3.5 flex items-center justify-between gap-4 lg:gap-8">
+          
+          {/* LEFT: Official Brand Logo on White */}
+          <div className="flex items-center shrink-0">
+            <Link href="/" className="inline-flex items-center" aria-label="Enugu Buy & Sell Home">
+              <Logo size="md" />
+            </Link>
           </div>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-sm sm:text-base tracking-tight text-[#111111] group-hover:text-[#087443] transition-colors leading-tight">
-              Enugu Buy &amp; Sell
-            </span>
-            <span className="text-[9px] font-bold tracking-[0.14em] text-[#087443] uppercase">
-              Powered by KINGSOK
-            </span>
-          </div>
-        </Link>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-5">
-          <Link
-            href="/browse"
-            className={`text-xs font-semibold transition-colors ${
-              pathname === '/browse' ? 'text-[#087443]' : 'text-[#667085] hover:text-[#111111]'
-            }`}
+          {/* CENTER: Large Marketplace Search Bar with Dropdown */}
+          <form
+            onSubmit={handleSearch}
+            className="hidden md:flex flex-1 max-w-2xl items-center rounded-full border border-slate-200 bg-slate-50/70 hover:border-slate-300 focus-within:border-[#087443] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#087443]/10 transition-all p-1"
           >
-            Browse Catalog
-          </Link>
-          <Link
-            href="/shops"
-            className={`text-xs font-semibold transition-colors ${
-              pathname === '/shops' ? 'text-[#087443]' : 'text-[#667085] hover:text-[#111111]'
-            }`}
-          >
-            Campus Stores
-          </Link>
-          <Link
-            href="/conversations"
-            className={`text-xs font-semibold transition-colors ${
-              pathname.startsWith('/conversations') ? 'text-[#087443]' : 'text-[#667085] hover:text-[#111111]'
-            }`}
-          >
-            Inbox
-          </Link>
+            {/* Category Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-[#087443] border-r border-slate-200 transition-colors cursor-pointer"
+              >
+                <span>{selectedCategory}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+
+              {categoryDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-lg py-1.5 z-50">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory(cat);
+                        setCategoryDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors cursor-pointer ${
+                        selectedCategory === cat ? 'text-[#087443] font-bold bg-[#E8F5EF]' : 'text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Search Input */}
+            <input
+              type="text"
+              placeholder="Search for anything in Enugu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent px-4 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+            />
+
+            {/* Green Search Button */}
+            <button
+              type="submit"
+              className="w-10 h-10 rounded-full bg-[#087443] hover:bg-[#065F37] text-white flex items-center justify-center transition-colors shrink-0 shadow-xs cursor-pointer"
+              aria-label="Search"
+            >
+              <Search className="w-4 h-4 stroke-[2.5]" />
+            </button>
+          </form>
+
+          {/* RIGHT: Wishlist, Cart (2), Account, and Sell on EBS */}
+          <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+            
+            {/* Wishlist */}
+            <Link
+              href="/browse"
+              className="hidden lg:flex flex-col items-center gap-0.5 text-slate-600 hover:text-[#087443] transition-colors"
+            >
+              <Heart className="w-5 h-5 stroke-[1.8]" />
+              <span className="text-[11px] font-medium tracking-tight">Wishlist</span>
+            </Link>
+
+            {/* Cart with Dynamic Badge (2) */}
+            <Link
+              href="/conversations"
+              className="hidden sm:flex flex-col items-center gap-0.5 text-slate-600 hover:text-[#087443] transition-colors relative"
+            >
+              <div className="relative">
+                <ShoppingCart className="w-5 h-5 stroke-[1.8]" />
+                <span className="absolute -top-1.5 -right-2 w-4 h-4 bg-[#087443] text-white rounded-full text-[10px] font-bold flex items-center justify-center">
+                  2
+                </span>
+              </div>
+              <span className="text-[11px] font-medium tracking-tight">Cart</span>
+            </Link>
+
+            {/* Account */}
+            <Link
+              href="/dashboard"
+              className="hidden sm:flex flex-col items-center gap-0.5 text-slate-600 hover:text-[#087443] transition-colors"
+            >
+              <User className="w-5 h-5 stroke-[1.8]" />
+              <span className="text-[11px] font-medium tracking-tight">Account</span>
+            </Link>
+
+            {/* Primary CTA: "Sell on EBS" */}
+            <Link
+              href="/create-product"
+              className="inline-flex items-center gap-2 bg-[#087443] hover:bg-[#065F37] text-white text-xs sm:text-sm font-bold px-4 sm:px-5 py-2.5 rounded-xl transition-all shadow-xs hover:shadow-sm"
+            >
+              <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
+              <span>Sell on EBS</span>
+            </Link>
+
+            {/* Mobile Hamburger Menu */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 hover:text-[#087443] transition-colors"
+              aria-label="Open Mobile Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+          </div>
+        </div>
+
+        {/* ── SUB-NAVIGATION ROW: Home (Active), Categories, Deals, Stores ── */}
+        <nav className="hidden md:flex border-t border-slate-100 bg-white">
+          <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 flex items-center gap-8 text-xs font-semibold text-slate-600">
+            {navLinks.map((link) => {
+              const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className={`py-3 transition-colors relative ${
+                    isActive ? 'text-[#087443] font-bold' : 'hover:text-[#087443]'
+                  }`}
+                >
+                  <span>{link.label}</span>
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 w-full h-[2.5px] bg-[#087443] rounded-t-full" />
+                  )}
+                </Link>
+              );
+            })}
+          </div>
         </nav>
 
-        {/* Action Button Group */}
-        <div className="flex items-center gap-2.5">
-          <Link
-            href="/create-shop"
-            className="hidden sm:inline-flex items-center gap-1.5 bg-[#087443] hover:bg-[#065f37] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-xs"
+        {/* Mobile Search Bar */}
+        <div className="md:hidden px-4 pb-3 pt-1">
+          <form
+            onSubmit={handleSearch}
+            className="flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Start Your Shop</span>
-          </Link>
-
-          <Link
-            href="/auth"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#087443] bg-[#E8F5EF] hover:bg-[#087443] hover:text-white px-3 py-2 rounded-xl transition-all border border-[#087443]/15"
-          >
-            <User className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Sign In / Account</span>
-            <span className="sm:hidden">Account</span>
-          </Link>
+            <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search in Enugu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none"
+            />
+            <button type="submit" className="bg-[#087443] text-white rounded-full px-3 py-1 text-xs font-bold">
+              Search
+            </button>
+          </form>
         </div>
-      </div>
-    </header>
+
+      </header>
+
+      {/* Slide-out Mobile Sidebar */}
+      <MobileSidebar
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
+    </>
   );
 }
+
+export default Navbar;

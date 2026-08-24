@@ -12,7 +12,6 @@ export interface PhoneNormalizationResult {
   error: string | null;
 }
 
-const NIGERIAN_PHONE_PREFIXES = ['70', '80', '81', '90', '91'];
 const USER_FRIENDLY_ERROR = 'Please enter a valid Nigerian phone number.';
 
 /**

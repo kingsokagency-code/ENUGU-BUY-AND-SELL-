@@ -23,7 +23,7 @@ function CreateProductForm() {
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [condition, setCondition] = useState('Used');
-  const [location, setLocation] = useState('UNEC Campus, Enugu');
+  const [location] = useState('UNEC Campus, Enugu');
 
   const [loadingShops, setLoadingShops] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -173,12 +173,16 @@ function CreateProductForm() {
               </div>
             </div>
           ) : (
-            /* FORM STATE */
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                
+            /* FORM STATE MATCHING REFERENCE SCREENSHOT */
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Add New Product</h1>
+                <p className="text-xs text-slate-500 mt-0.5">Fill in the details to list your product in your store.</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-xl flex items-center justify-between gap-2">
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-xl flex items-center justify-between gap-2 font-medium">
                     <span>{error}</span>
                     {error.includes('Sign In') && (
                       <Link href="/auth" className="bg-[#087443] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
@@ -190,8 +194,8 @@ function CreateProductForm() {
 
                 {/* Shop Selector */}
                 <div>
-                  <label className="block text-xs font-bold text-[#111111] mb-1">
-                    Select Your Shop *
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Storefront *
                   </label>
                   {shops.length === 0 ? (
                     <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-xs text-amber-800 flex items-center justify-between">
@@ -204,7 +208,7 @@ function CreateProductForm() {
                     <select
                       value={shopId}
                       onChange={(e) => setShopId(e.target.value)}
-                      className="w-full bg-[#FAFAF8] border border-slate-300 text-sm text-[#111111] rounded-xl px-3.5 py-2.5 outline-none focus:border-[#087443]"
+                      className="w-full bg-[#FAFAF8] border border-slate-200 text-xs font-bold text-slate-800 rounded-xl px-3.5 py-3 outline-none focus:border-[#087443]"
                       required
                     >
                       {shops.map((s) => (
@@ -218,88 +222,141 @@ function CreateProductForm() {
 
                 {/* Product Name */}
                 <div>
-                  <label className="block text-xs font-bold text-[#111111] mb-1">
-                    Product Title / Name *
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Product Name *
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. HP EliteBook 840 G5 (16GB RAM / 256GB SSD)"
+                    placeholder="e.g. iPhone 13 128GB"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl px-3.5 py-2.5 outline-none"
+                    className="w-full bg-[#FAFAF8] border border-slate-200 focus:border-[#087443] text-xs sm:text-sm text-slate-900 rounded-xl px-3.5 py-3 outline-none font-medium placeholder:text-slate-400"
                     required
                   />
                 </div>
 
-                {/* Category & Condition Grid */}
+                {/* Category Dropdown */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Category *
+                  </label>
+                  <select
+                    className="w-full bg-[#FAFAF8] border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 rounded-xl px-3.5 py-3 outline-none focus:border-[#087443]"
+                  >
+                    <option value="phones">Phones &amp; Tablets</option>
+                    <option value="laptops">Laptops &amp; Computers</option>
+                    <option value="fashion">Fashion &amp; Shoes</option>
+                    <option value="electronics">Electronics &amp; Audio</option>
+                    <option value="appliances">Home &amp; Kitchen</option>
+                    <option value="books">Books &amp; Textbooks</option>
+                    <option value="services">Campus Services</option>
+                  </select>
+                </div>
+
+                {/* Price (₦) and Stock Quantity Side-by-Side */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-[#111111] mb-1">
-                      Category *
-                    </label>
-                    <select
-                      value={condition}
-                      onChange={(e) => setCondition(e.target.value)}
-                      className="w-full bg-[#FAFAF8] border border-slate-300 text-sm text-[#111111] rounded-xl px-3.5 py-2.5 outline-none focus:border-[#087443]"
-                    >
-                      <option value="Used">Used (Good condition)</option>
-                      <option value="Refurbished">Refurbished / Open Box</option>
-                      <option value="New">Brand New</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[#111111] mb-1">
+                    <label className="block text-xs font-bold text-slate-800 mb-1.5">
                       Price (₦) *
                     </label>
                     <input
                       type="number"
                       inputMode="numeric"
-                      placeholder="e.g. 280000"
+                      placeholder="e.g. 420000"
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
-                      className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl px-3.5 py-2.5 outline-none font-bold"
-                      min="1"
+                      className="w-full bg-[#FAFAF8] border border-slate-200 focus:border-[#087443] text-xs sm:text-sm text-slate-900 rounded-xl px-3.5 py-3 outline-none font-bold placeholder:text-slate-400"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                      Stock Quantity *
+                    </label>
+                    <input
+                      type="number"
+                      defaultValue={1}
+                      min={1}
+                      className="w-full bg-[#FAFAF8] border border-slate-200 focus:border-[#087443] text-xs sm:text-sm text-slate-900 rounded-xl px-3.5 py-3 outline-none font-semibold"
                       required
                     />
                   </div>
                 </div>
 
-                {/* Location */}
+                {/* Condition Dropdown */}
                 <div>
-                  <label className="block text-xs font-bold text-[#111111] mb-1">
-                    Location on Campus / Enugu *
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Condition *
                   </label>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl px-3.5 py-2.5 outline-none"
-                    required
-                  />
+                  <select
+                    value={condition}
+                    onChange={(e) => setCondition(e.target.value)}
+                    className="w-full bg-[#FAFAF8] border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 rounded-xl px-3.5 py-3 outline-none focus:border-[#087443]"
+                  >
+                    <option value="Brand New">Brand New</option>
+                    <option value="Used">Used (Good Condition)</option>
+                    <option value="Refurbished">Refurbished / Open Box</option>
+                  </select>
+                </div>
+
+                {/* Image Upload Box Matching Reference Screenshot */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Product Images
+                  </label>
+                  <div className="border-2 border-dashed border-slate-200 hover:border-[#087443]/50 bg-[#FAFAF8] rounded-2xl p-8 text-center space-y-2 transition-colors cursor-pointer group">
+                    <div className="w-12 h-12 rounded-2xl bg-[#E8F5EF] text-[#087443] flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                      <Package className="w-6 h-6 text-[#087443]" />
+                    </div>
+                    <div className="font-bold text-xs text-slate-800">
+                      Upload Images
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Drag &amp; drop or click to upload <br />
+                      PNG, JPG up to 5MB
+                    </p>
+                  </div>
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-xs font-bold text-[#111111] mb-1">
-                    Description &amp; Specifications
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Description
                   </label>
                   <textarea
-                    placeholder="Describe key specs, accessories included, or reason for selling..."
+                    rows={4}
+                    placeholder="Describe your product, specifications, warranty, or condition..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl px-3.5 py-2.5 outline-none min-h-[90px]"
+                    className="w-full bg-[#FAFAF8] border border-slate-200 focus:border-[#087443] text-xs sm:text-sm text-slate-900 rounded-xl p-3.5 outline-none font-medium placeholder:text-slate-400 resize-none leading-relaxed"
                   />
                 </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading || shops.length === 0}
-                  className="w-full bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3.5 rounded-xl shadow-xs transition-all mt-2"
-                >
-                  {loading ? 'Publishing Product...' : 'Publish Product to Marketplace'}
-                </button>
+                {/* Action Buttons: Cancel and Publish Product */}
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                  <Link
+                    href="/seller/products"
+                    className="px-5 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                  >
+                    Cancel
+                  </Link>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-extrabold text-xs px-7 py-3 rounded-xl shadow-xs hover:shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Publishing...</span>
+                      </>
+                    ) : (
+                      <span>Publish Product</span>
+                    )}
+                  </button>
+                </div>
               </form>
             </div>
           )}
@@ -309,33 +366,24 @@ function CreateProductForm() {
 
 export default function CreateProductPage() {
   return (
-    <div className="text-[#111111] px-4 py-6">
+    <div className="text-[#111111] px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
-        
-        {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#087443] hover:underline">
+          <Link
+            href="/seller/products"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#087443] hover:underline"
+          >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Home</span>
+            <span>Back to Inventory</span>
           </Link>
-          <span className="text-xs font-semibold text-[#087443] bg-[#E8F5EF] px-3 py-1 rounded-full border border-[#087443]/15">
-            Publish Item
+          <span className="text-xs font-bold text-[#087443] bg-[#E8F5EF] px-3 py-1 rounded-full border border-[#087443]/15">
+            Seller Hub
           </span>
         </div>
 
-        <main className="space-y-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">Add Product to Your Storefront</h1>
-            <p className="text-xs sm:text-sm text-[#667085]">
-              Publish an item with name, price, and condition to make it discoverable across campus.
-            </p>
-          </div>
-
-          <Suspense fallback={<p className="text-xs text-[#667085]">Loading product creation form...</p>}>
-            <CreateProductForm />
-          </Suspense>
-        </main>
-
+        <Suspense fallback={<p className="text-xs text-[#667085]">Loading product creation form...</p>}>
+          <CreateProductForm />
+        </Suspense>
       </div>
     </div>
   );

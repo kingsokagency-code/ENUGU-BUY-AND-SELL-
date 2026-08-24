@@ -102,31 +102,31 @@ export function ProductCard({
         </div>
 
         {/* Content Body */}
-        <div className="p-3.5 sm:p-4 flex flex-col flex-1 justify-between space-y-3">
+        <div className="p-3.5 sm:p-4 flex flex-col flex-1 justify-between space-y-2.5">
           <div className="space-y-1">
             {/* Bold Price Hierarchy */}
-            <div className="text-[17px] sm:text-[18px] font-black text-[#111111] leading-tight">
+            <div className="text-[17px] sm:text-[18px] font-black text-[#087443] tracking-tight leading-tight">
               ₦{Number(price).toLocaleString()}
             </div>
 
             {/* Product Title */}
-            <h3 className="text-[13px] sm:text-[14px] font-semibold text-[#344054] line-clamp-2 leading-snug group-hover:text-[#087443] transition-colors">
+            <h3 className="text-[13px] sm:text-[14px] font-bold text-[#111111] line-clamp-2 leading-snug group-hover:text-[#087443] transition-colors">
               {name}
             </h3>
           </div>
 
           {/* Seller Trust Footnote */}
           {shop && (
-            <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-[#667085]">
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-[#667085]">
               <div className="flex items-center gap-1.5 min-w-0">
                 <Store className="w-3.5 h-3.5 text-[#087443] shrink-0" />
-                <span className="text-[11px] font-medium text-[#475467] truncate">
+                <span className="text-[11px] font-semibold text-[#475467] truncate">
                   {shop.name}
                 </span>
               </div>
 
               {shop.is_verified && (
-                <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#087443] bg-[#E8F5EF] px-1.5 py-0.5 rounded shrink-0">
+                <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#087443] bg-[#E8F5EF] px-1.5 py-0.5 rounded-md shrink-0 border border-[#087443]/15">
                   <CheckCircle2 className="w-3 h-3 text-[#087443]" />
                   <span>Verified</span>
                 </span>

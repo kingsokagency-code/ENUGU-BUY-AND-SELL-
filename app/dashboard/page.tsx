@@ -1,152 +1,464 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import {
+  Flame,
+  Plus,
+  Trash2,
+  CheckCircle2,
+  MapPin,
+  Sparkles,
+  ArrowRight,
+  TrendingUp,
+  ExternalLink,
+} from 'lucide-react';
+
+interface DealItem {
+  id: string;
+  name: string;
+  category: string;
+  originalPrice: number;
+  dealPrice: number;
+  discountPercent?: number;
+  sellerName: string;
+  isVerifiedSeller: boolean;
+  location: string;
+  viewersCount: number;
+  imageUrl?: string;
+  createdAt: string;
+}
 
 export default function DashboardPage() {
-  const [responses, setResponses] = useState<Record<string, string>[]>([]);
+  const [activeTab, setActiveTab] = useState<'deals' | 'overview'>('deals');
+  const [deals, setDeals] = useState<DealItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [password, setPassword] = useState('');
-  const [authed, setAuthed] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
 
-  /* ── Server-Side Admin Auth (Remediating H1) ── */
-  const handleLogin = async () => {
-    setAuthError(null);
+  // New Deal Form State
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState('Phones & Tablets');
+  const [originalPrice, setOriginalPrice] = useState('');
+  const [dealPrice, setDealPrice] = useState('');
+  const [sellerName, setSellerName] = useState('');
+  const [location, setLocation] = useState('Nsukka, Enugu');
+  const [isVerified, setIsVerified] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Fetch all live deals
+  const fetchDeals = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
+      const res = await fetch('/api/deals');
       const data = await res.json();
-      if (!res.ok) {
-        setAuthError(data.error || 'Authentication failed');
-      } else {
-        setAuthed(true);
-        fetchAll();
+      if (data.success && data.deals) {
+        setDeals(data.deals);
       }
     } catch {
-      setAuthError('Connection error during authentication');
-    }
-  };
-
-  /* ── Fetch Data from Protected APIs (Remediating C1) ── */
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    try {
-      const rRes = await fetch('/api/responses');
-      if (rRes.status === 401) {
-        setAuthed(false);
-        return;
-      }
-      const data = await rRes.json();
-      setResponses(data.responses ?? []);
-      setAuthed(true);
-    } catch {
-      console.error('[Dashboard] Error fetching responses');
+      console.error('Failed to load deals');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    let isMounted = true;
+    async function load() {
+      try {
+        const res = await fetch('/api/deals');
+        const data = await res.json();
+        if (isMounted && data.success && data.deals) {
+          setDeals(data.deals);
+        }
+      } catch {
+        console.error('Failed to load deals');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-  /* ── PASSWORD GATE ── */
-  if (!authed) {
-    return (
-      <div className="min-h-screen bg-[#FAFAF8] text-[#111111] flex items-center justify-center px-5">
-        <div className="w-full max-w-sm space-y-6">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-[#087443] text-white font-black flex items-center justify-center text-xl shadow-sm">
-              E
+  // Handle Publish New Live Deal
+  const handleAddDeal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !dealPrice || !sellerName.trim()) {
+      setFeedbackMsg({ type: 'error', text: 'Please fill in all required fields.' });
+      return;
+    }
+
+    setSubmitting(true);
+    setFeedbackMsg(null);
+
+    try {
+      const res = await fetch('/api/deals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          category,
+          originalPrice: originalPrice ? Number(originalPrice) : Number(dealPrice),
+          dealPrice: Number(dealPrice),
+          sellerName: sellerName.trim(),
+          location: location.trim(),
+          isVerifiedSeller: isVerified,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setFeedbackMsg({ type: 'success', text: '🎉 Deal published to live homepage successfully!' });
+        setName('');
+        setOriginalPrice('');
+        setDealPrice('');
+        setSellerName('');
+        fetchDeals();
+      } else {
+        setFeedbackMsg({ type: 'error', text: data.error || 'Failed to publish deal.' });
+      }
+    } catch {
+      setFeedbackMsg({ type: 'error', text: 'Network error while publishing deal.' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Handle Delete Deal
+  const handleDeleteDeal = async (id: string) => {
+    if (!confirm('Are you sure you want to remove this live deal?')) return;
+
+    try {
+      const res = await fetch(`/api/deals?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDeals((prev) => prev.filter((d) => d.id !== id));
+      }
+    } catch {
+      alert('Failed to delete deal');
+    }
+  };
+
+  const categoriesList = [
+    'Phones & Tablets',
+    'Electronics',
+    'Fashion',
+    'Home & Kitchen',
+    'Beauty & Health',
+    'Vehicles',
+    'Property',
+  ];
+
+  const campusLocations = [
+    'UNEC Campus, Enugu',
+    'UNN Campus, Nsukka',
+    'Nsukka, Enugu',
+    'Independence Layout, Enugu',
+    'New Haven, Enugu',
+    'Abakpa, Enugu',
+    'Ogui Road, Enugu',
+    'Gariki, Enugu',
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#F8FAF9] text-[#111827] pb-16">
+      
+      {/* ── TOP BANNER ── */}
+      <div className="bg-[#053D24] text-white py-8 px-4 sm:px-8 lg:px-12 border-b border-emerald-800">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 bg-emerald-800/60 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+              <Flame className="w-3.5 h-3.5 text-[#FBBF24]" />
+              <span>Live Marketplace Operations</span>
             </div>
-            <div className="text-center">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#087443]">Admin Control</p>
-              <h1 className="text-xl font-bold text-[#111111] mt-1">Research Dashboard</h1>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              Seller &amp; Admin Command Center
+            </h1>
+            <p className="text-emerald-200/80 text-xs sm:text-sm font-medium">
+              Manage real-time hot deals, verified merchant adverts, and campus listings.
+            </p>
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
-            <div>
-              <label className="block text-xs font-bold text-[#111111] mb-1.5">Admin Key</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setAuthError(null); }}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                placeholder="Enter admin password"
-                className="w-full bg-[#FAFAF8] border border-slate-300 rounded-xl px-4 py-3 text-sm text-[#111111] outline-none focus:border-[#087443]"
-              />
-            </div>
-            {authError && <p className="text-red-600 text-xs font-semibold">{authError}</p>}
-            <button
-              onClick={handleLogin}
-              className="w-full bg-[#087443] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#065f37] transition-colors shadow-sm"
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              target="_blank"
+              className="inline-flex items-center gap-2 bg-white text-[#053D24] hover:bg-emerald-50 text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm"
             >
-              Authenticate Admin
-            </button>
+              <span>View Live Homepage</span>
+              <ExternalLink className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </div>
-    );
-  }
 
-  /* ── DASHBOARD VIEW ── */
-  return (
-    <div className="min-h-screen bg-[#FAFAF8] text-[#111111]">
-      <header className="sticky top-0 z-20 bg-white border-b border-slate-200 px-5 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#087443] text-white font-black flex items-center justify-center text-base">
-              E
-            </div>
-            <div>
-              <p className="text-xs font-bold text-[#087443] uppercase tracking-wider">Enugu Buy &amp; Sell</p>
-              <p className="text-sm font-bold text-[#111111]">Admin Survey Dashboard</p>
-            </div>
-          </div>
-          <span className="text-xs bg-[#E8F5EF] text-[#087443] px-3 py-1 rounded-full font-bold">
-            Authenticated Admin
-          </span>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-[#111111]">Survey Submissions ({responses.length})</h2>
-          <p className="text-xs text-[#667085] mt-1">Protected admin view of empirical research dataset.</p>
+      {/* ── MAIN CONTENT CONTAINER ── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 pt-8 space-y-8">
+        
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-3 border-b border-slate-200 pb-2 text-sm font-bold">
+          <button
+            onClick={() => setActiveTab('deals')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+              activeTab === 'deals'
+                ? 'bg-[#087443] text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Flame className="w-4 h-4 text-[#FBBF24]" />
+            <span>Live Hot Deals Manager</span>
+            <span className="bg-white/20 text-white text-[11px] px-2 py-0.5 rounded-full font-black">
+              {deals.length}
+            </span>
+          </button>
         </div>
 
-        {loading ? (
-          <p className="text-xs text-[#667085]">Loading responses...</p>
-        ) : (
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50">
-                    <th className="text-left px-5 py-3 text-[#667085] font-bold">Institution</th>
-                    <th className="text-left px-5 py-3 text-[#667085] font-bold">Challenge</th>
-                    <th className="text-left px-5 py-3 text-[#667085] font-bold">Platform</th>
-                    <th className="text-left px-5 py-3 text-[#667085] font-bold">Submitted At</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {responses.map((r, i) => (
-                    <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="px-5 py-3 font-medium text-[#111111]">{r.institution || '—'}</td>
-                      <td className="px-5 py-3 text-[#667085]">{r.biggest_challenge || '—'}</td>
-                      <td className="px-5 py-3 text-[#667085]">{r.platform_preference || '—'}</td>
-                      <td className="px-5 py-3 text-[#667085]">{r.submitted_at || r.completed_at || '—'}</td>
-                    </tr>
+        {/* ── TAB 1: LIVE HOT DEALS MANAGER ── */}
+        {activeTab === 'deals' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            {/* 1. LEFT: ADD NEW LIVE DEAL FORM (5 COLS) */}
+            <div className="lg:col-span-5 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-[#087443] font-bold text-xs uppercase tracking-wider">
+                  <Plus className="w-4 h-4" />
+                  <span>Publish New Hot Deal</span>
+                </div>
+                <h3 className="text-xl font-black text-slate-900">Add Live Spotlight Item</h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  Newly published deals instantly cycle on the homepage 3D carousel.
+                </p>
+              </div>
+
+              {feedbackMsg && (
+                <div
+                  className={`p-3.5 rounded-xl text-xs font-bold ${
+                    feedbackMsg.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'bg-rose-50 text-rose-800 border border-rose-200'
+                  }`}
+                >
+                  {feedbackMsg.text}
+                </div>
+              )}
+
+              <form onSubmit={handleAddDeal} className="space-y-4">
+                
+                {/* Title */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Deal Title / Product Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. iPhone 14 Pro Max 256GB"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#087443] focus:bg-white transition-all font-medium"
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#087443] font-medium"
+                  >
+                    {categoriesList.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Pricing: Original & Deal Price in Naira */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Original Price (₦)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 620000"
+                      value={originalPrice}
+                      onChange={(e) => setOriginalPrice(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#087443] font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Deal Price (₦) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="e.g. 580000"
+                      value={dealPrice}
+                      onChange={(e) => setDealPrice(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#087443] font-medium font-bold text-[#087443]"
+                    />
+                  </div>
+                </div>
+
+                {/* Seller Name */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Seller / Store Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Kingsley's Tech Hub"
+                    value={sellerName}
+                    onChange={(e) => setSellerName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#087443] font-medium"
+                  />
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Campus / Enugu Location
+                  </label>
+                  <select
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#087443] font-medium"
+                  >
+                    {campusLocations.map((loc) => (
+                      <option key={loc} value={loc}>
+                        {loc}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Verified Seller Checkbox */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="verifiedCheck"
+                    checked={isVerified}
+                    onChange={(e) => setIsVerified(e.target.checked)}
+                    className="w-4 h-4 text-[#087443] rounded-sm focus:ring-[#087443]"
+                  />
+                  <label htmlFor="verifiedCheck" className="text-xs font-bold text-slate-700 cursor-pointer">
+                    Mark as Verified Seller (Shows ✔ Badge)
+                  </label>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-[#087443] hover:bg-[#065F37] disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-[#FBBF24]" />
+                  <span>{submitting ? 'Publishing Deal...' : 'Publish to Live Homepage'}</span>
+                </button>
+
+              </form>
+            </div>
+
+            {/* 2. RIGHT: ACTIVE LIVE DEALS LIST (7 COLS) */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">Active Live Deals</h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Currently rotating on the homepage spotlight.
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-[#087443] bg-[#E8F5EF] px-3 py-1 rounded-full">
+                  {deals.length} Live Items
+                </span>
+              </div>
+
+              {loading ? (
+                <div className="text-center py-12 text-slate-400 text-xs font-medium">
+                  Loading live deals...
+                </div>
+              ) : deals.length === 0 ? (
+                <div className="bg-white rounded-3xl p-8 text-center border border-slate-200 space-y-3">
+                  <Flame className="w-8 h-8 text-amber-400 mx-auto" />
+                  <p className="text-sm font-bold text-slate-700">No active deals found</p>
+                  <p className="text-xs text-slate-400">Use the form on the left to publish your first live deal.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {deals.map((deal, idx) => (
+                    <div
+                      key={deal.id}
+                      className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-1.5 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black bg-[#053D24] text-white px-2 py-0.5 rounded-md">
+                            #{idx + 1}
+                          </span>
+                          <span className="text-xs font-bold text-slate-500">{deal.category}</span>
+                          {deal.isVerifiedSeller && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-black bg-emerald-50 text-[#087443] px-1.5 py-0.5 rounded-sm">
+                              <CheckCircle2 className="w-3 h-3 stroke-[2.5]" />
+                              Verified
+                            </span>
+                          )}
+                        </div>
+
+                        <h4 className="text-sm font-black text-slate-900 leading-tight">
+                          {deal.name}
+                        </h4>
+
+                        <div className="flex items-center gap-3 text-xs">
+                          {deal.originalPrice > deal.dealPrice && (
+                            <span className="text-slate-400 line-through font-medium">
+                              ₦{deal.originalPrice.toLocaleString()}
+                            </span>
+                          )}
+                          <span className="font-black text-[#087443] text-sm">
+                            ₦{deal.dealPrice.toLocaleString()}
+                          </span>
+                          {deal.discountPercent ? (
+                            <span className="text-[10px] font-black bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded-sm">
+                              -{deal.discountPercent}%
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <div className="flex items-center gap-3 text-[11px] text-slate-400 font-medium">
+                          <span>🏪 {deal.sellerName}</span>
+                          <span>📍 {deal.location}</span>
+                          <span>👥 {deal.viewersCount} viewing</span>
+                        </div>
+                      </div>
+
+                      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
+                        <button
+                          onClick={() => handleDeleteDeal(deal.id)}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-2 rounded-xl transition-all cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
+
           </div>
         )}
-      </main>
+
+      </div>
     </div>
   );
 }

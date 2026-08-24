@@ -35,7 +35,7 @@ export function ShopCard({
         <div className="space-y-3">
           {/* Header Row: Monogram + Verification Badge */}
           <div className="flex items-center justify-between">
-            <div className="w-12 h-12 rounded-2xl bg-[#E8F5EF] text-[#087443] font-black text-lg flex items-center justify-center shadow-inner border border-[#087443]/15">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#087443] via-[#053D24] to-[#087443] text-white font-black text-lg flex items-center justify-center shadow-sm border border-emerald-700/30 group-hover:scale-105 transition-transform">
               {initial}
             </div>
 
