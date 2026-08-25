@@ -380,17 +380,23 @@ export default function SellerDashboardPage() {
         <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#087443] via-[#053D24] to-[#087443] text-white font-black text-2xl flex items-center justify-center shadow-md border-2 border-emerald-700/30 shrink-0">
-              K
+              {authState.sellerData?.shops[0]?.name
+                ? authState.sellerData.shops[0].name.charAt(0).toUpperCase()
+                : 'S'}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-slate-900">Kingsok Gadgets</h2>
+                <h2 className="text-lg font-black text-slate-900">
+                  {authState.sellerData?.shops[0]?.name || 'My Storefront'}
+                </h2>
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-[#E8F5EF] text-[#087443] px-2 py-0.5 rounded-md border border-[#087443]/15">
                   <CheckCircle2 className="w-3 h-3 text-[#087443]" />
                   <span>Verified Store</span>
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">Member since Jan 2024 • UNEC Campus, Enugu</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {authState.sellerData?.shops[0]?.location || 'UNEC Campus, Enugu'}
+              </p>
             </div>
           </div>
 
@@ -400,8 +406,8 @@ export default function SellerDashboardPage() {
               <span>Pro Merchant</span>
             </div>
             <div className="bg-[#FAFAF8] border border-slate-200 px-3 py-1.5 rounded-xl">
-              <span className="text-slate-400 text-[10px] block">Active Listings</span>
-              <span className="text-[#087443]">56 Items</span>
+              <span className="text-slate-400 text-[10px] block">Store Status</span>
+              <span className="text-[#087443]">Active Merchant</span>
             </div>
           </div>
         </div>

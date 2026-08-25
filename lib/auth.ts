@@ -138,6 +138,33 @@ export async function signInWithEmail(input: {
 }
 
 /**
+ * Sign in / Sign up with Google OAuth
+ */
+export async function signInWithGoogle(redirectTo?: string) {
+  try {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://enugu-buy-sell.vercel.app';
+    const targetUrl = redirectTo
+      ? `${origin}/auth?redirect=${encodeURIComponent(redirectTo)}`
+      : `${origin}/auth`;
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: targetUrl,
+      },
+    });
+
+    if (error) {
+      return { error: { message: error.message } };
+    }
+    return { data, error: null };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Google sign-in failed';
+    return { error: { message: msg } };
+  }
+}
+
+/**
  * Resend email verification link
  */
 export async function resendVerificationEmail(email: string) {

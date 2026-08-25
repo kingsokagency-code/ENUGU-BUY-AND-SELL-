@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Logo } from '@/components/brand/Logo';
+import { getCurrentUser, getUserProfile, checkUserSellerStatus } from '@/lib/auth';
 import {
   X,
   Home,
@@ -27,6 +28,42 @@ interface MobileSidebarProps {
 
 export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const pathname = usePathname();
+  const [userName, setUserName] = useState<string | null>(null);
+  const [isSeller, setIsSeller] = useState(false);
+  const [storeName, setStoreName] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadUser() {
+      if (!isOpen) return;
+      const { user } = await getCurrentUser();
+      if (user && isMounted) {
+        const { profile } = await getUserProfile(user.id);
+        const name =
+          profile?.full_name ||
+          user.user_metadata?.full_name ||
+          user.email?.split('@')[0] ||
+          'EBS Member';
+        setUserName(name);
+
+        const sellerStatus = await checkUserSellerStatus(user.id);
+        if (isMounted) {
+          setIsSeller(sellerStatus.isSeller);
+          if (sellerStatus.shops.length > 0) {
+            setStoreName(sellerStatus.shops[0].name);
+          }
+        }
+      } else if (isMounted) {
+        setUserName(null);
+        setIsSeller(false);
+        setStoreName(null);
+      }
+    }
+    loadUser();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
 
   const menuLinks = [
     { label: 'Home', href: '/', icon: Home },
@@ -68,25 +105,43 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
                 <Logo variant="compact" theme="light" size="sm" />
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Profile Card Header */}
-              <div className="bg-[#053D24] border border-emerald-700/50 rounded-2xl p-3.5 flex items-center gap-3">
+              <Link
+                href="/auth"
+                onClick={onClose}
+                className="bg-[#053D24] hover:bg-[#074D2E] border border-emerald-700/50 rounded-2xl p-3.5 flex items-center gap-3 transition-colors block"
+              >
                 <div className="w-11 h-11 rounded-xl bg-white text-[#087443] font-black text-lg flex items-center justify-center shadow-md shrink-0">
-                  K
+                  {userName ? userName.charAt(0).toUpperCase() : 'E'}
                 </div>
-                <div className="min-w-0">
-                  <div className="font-bold text-sm text-white truncate">Kingsok Gadgets</div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-bold text-sm text-white truncate">
+                    {userName || 'Welcome to EBS'}
+                  </div>
                   <div className="flex items-center gap-1 text-[10px] font-bold text-[#FBBF24]">
-                    <CheckCircle2 className="w-3 h-3 text-[#FBBF24]" />
-                    <span>Verified Merchant</span>
+                    {userName ? (
+                      <>
+                        <CheckCircle2 className="w-3 h-3 text-[#FBBF24]" />
+                        <span>
+                          {isSeller
+                            ? storeName
+                              ? `Store: ${storeName}`
+                              : 'Verified Merchant'
+                            : 'Campus Member / Buyer'}
+                        </span>
+                      </>
+                    ) : (
+                      <span>Sign in to your account &rarr;</span>
+                    )}
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Navigation Links */}
               <nav className="space-y-1">

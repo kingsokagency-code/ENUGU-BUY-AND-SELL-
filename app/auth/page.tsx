@@ -3,13 +3,18 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import {
   signUpWithEmail,
   signInWithEmail,
+  signInWithGoogle,
   resendVerificationEmail,
   getCurrentUser,
   getUserProfile,
   updateUserProfile,
+  checkUserSellerStatus,
+  signOut,
+  type SellerStatus,
 } from '@/lib/auth';
 import {
   ArrowLeft,
@@ -22,6 +27,12 @@ import {
   Phone,
   RefreshCw,
   Sparkles,
+  MessageCircle,
+  ShoppingBag,
+  Store,
+  LogOut,
+  LayoutGrid,
+  BarChart3,
 } from 'lucide-react';
 
 function AuthContent() {
@@ -29,8 +40,10 @@ function AuthContent() {
   const router = useRouter();
   const redirectUrl = searchParams.get('redirect') || searchParams.get('returnUrl') || '/';
 
-  // Mode: 'signin' | 'signup' | 'verify-notice' | 'profile-complete' | 'success'
-  const [mode, setMode] = useState<'signin' | 'signup' | 'verify-notice' | 'profile-complete' | 'success'>('signin');
+  // Mode: 'signin' | 'signup' | 'verify-notice' | 'profile-complete' | 'account-hub' | 'success'
+  const [mode, setMode] = useState<
+    'signin' | 'signup' | 'verify-notice' | 'profile-complete' | 'account-hub' | 'success'
+  >('signin');
 
   // Form Fields
   const [email, setEmail] = useState('');
@@ -41,26 +54,69 @@ function AuthContent() {
 
   // UI States
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [authenticatedUserId, setAuthenticatedUserId] = useState<string | null>(null);
+  const [sellerInfo, setSellerInfo] = useState<SellerStatus | null>(null);
 
-  // Check if already authenticated on mount
+  // Initialize session & listen to auth state changes (e.g. from email link verification)
   useEffect(() => {
-    async function checkCurrentSession() {
-      const { user } = await getCurrentUser();
-      if (user) {
-        setAuthenticatedUserId(user.id);
-        const { profile } = await getUserProfile(user.id);
-        if (profile) {
-          setFullName(profile.full_name || '');
+    let isMounted = true;
+
+    async function handleUserSession(user: { id: string; email?: string; user_metadata?: { full_name?: string } } | null) {
+      if (!user || !isMounted) return;
+
+      setAuthenticatedUserId(user.id);
+      if (user.email) setEmail(user.email);
+
+      const { profile } = await getUserProfile(user.id);
+      const sellerRes = await checkUserSellerStatus(user.id);
+      if (isMounted) setSellerInfo(sellerRes);
+
+      if (profile) {
+        if (isMounted) {
+          setFullName(profile.full_name || user.user_metadata?.full_name || '');
           setLocation(profile.location || 'UNEC Campus, Enugu');
           setPhone(profile.phone || '');
         }
+
+        // If location is not set, prompt profile completion
+        if (!profile.location) {
+          if (isMounted) setMode('profile-complete');
+        } else {
+          // Profile is complete: show the Account Hub
+          if (isMounted) {
+            setMode((currentMode) =>
+              currentMode !== 'verify-notice' && currentMode !== 'profile-complete'
+                ? 'account-hub'
+                : currentMode
+            );
+          }
+        }
+      } else {
+        // New user from OAuth or email confirmation without row yet
+        if (isMounted) setMode('profile-complete');
       }
     }
-    checkCurrentSession();
+
+    // Check current session on mount
+    getCurrentUser().then(({ user }) => {
+      if (user) handleUserSession(user);
+    });
+
+    // Subscribe to auth state changes (such as email confirmation link redirects)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user && isMounted) {
+        handleUserSession(session.user);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   // Handle Email Sign In
@@ -81,14 +137,25 @@ function AuthContent() {
       } else if (res.data?.user) {
         setAuthenticatedUserId(res.data.user.id);
         const { profile } = await getUserProfile(res.data.user.id);
+        const sellerRes = await checkUserSellerStatus(res.data.user.id);
+        setSellerInfo(sellerRes);
+
         if (!profile?.location) {
           setFullName(profile?.full_name || res.data.user.user_metadata?.full_name || '');
           setMode('profile-complete');
         } else {
-          setMode('success');
-          setTimeout(() => {
-            router.push(redirectUrl);
-          }, 1000);
+          setFullName(profile.full_name || '');
+          setLocation(profile.location);
+          setPhone(profile.phone || '');
+
+          if (redirectUrl && redirectUrl !== '/' && redirectUrl !== '/auth') {
+            setMode('success');
+            setTimeout(() => {
+              router.push(redirectUrl);
+            }, 1000);
+          } else {
+            setMode('account-hub');
+          }
         }
       }
     } catch {
@@ -119,6 +186,17 @@ function AuthContent() {
       setError('Sign up failed. Please check your network and try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle Google OAuth Sign In
+  const handleGoogleAuth = async () => {
+    setError(null);
+    setGoogleLoading(true);
+    const res = await signInWithGoogle(redirectUrl);
+    if (res.error) {
+      setError(res.error.message);
+      setGoogleLoading(false);
     }
   };
 
@@ -163,16 +241,35 @@ function AuthContent() {
       if (!res.success) {
         setError(res.error || 'Failed to update profile.');
       } else {
-        setMode('success');
-        setTimeout(() => {
-          router.push(redirectUrl);
-        }, 1000);
+        const sellerRes = await checkUserSellerStatus(authenticatedUserId);
+        setSellerInfo(sellerRes);
+
+        if (redirectUrl && redirectUrl !== '/' && redirectUrl !== '/auth') {
+          setMode('success');
+          setTimeout(() => {
+            router.push(redirectUrl);
+          }, 1000);
+        } else {
+          setMode('account-hub');
+        }
       }
     } catch {
       setError('An unexpected error occurred while saving profile.');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle Sign Out
+  const handleSignOut = async () => {
+    setLoading(true);
+    await signOut();
+    setAuthenticatedUserId(null);
+    setFullName('');
+    setEmail('');
+    setSellerInfo(null);
+    setMode('signin');
+    setLoading(false);
   };
 
   const campusLocations = [
@@ -189,7 +286,7 @@ function AuthContent() {
   ];
 
   return (
-    <div className="text-[#111111] px-4 py-8 max-w-md mx-auto space-y-6">
+    <div className="text-[#111111] px-4 py-8 max-w-lg mx-auto space-y-6">
       {/* Navigation Breadcrumb */}
       <div className="flex items-center justify-between">
         <Link
@@ -212,6 +309,8 @@ function AuthContent() {
             <Mail className="w-6 h-6 animate-pulse" />
           ) : mode === 'profile-complete' ? (
             <User className="w-6 h-6" />
+          ) : mode === 'account-hub' ? (
+            <User className="w-6 h-6" />
           ) : mode === 'success' ? (
             <CheckCircle2 className="w-6 h-6" />
           ) : (
@@ -223,6 +322,7 @@ function AuthContent() {
           {mode === 'signup' && 'Create Your EBS Account'}
           {mode === 'verify-notice' && 'Verify Your Email'}
           {mode === 'profile-complete' && 'Complete Your Profile'}
+          {mode === 'account-hub' && 'Your Account Hub'}
           {mode === 'success' && 'Welcome to Enugu Buy & Sell'}
         </h1>
         <p className="text-xs sm:text-sm text-[#667085]">
@@ -230,12 +330,13 @@ function AuthContent() {
           {mode === 'signup' && 'Join the Enugu campus marketplace to buy, sell, and connect.'}
           {mode === 'verify-notice' && `We sent a confirmation link to ${email || 'your email'}.`}
           {mode === 'profile-complete' && 'Just a few details to personalize your marketplace experience.'}
+          {mode === 'account-hub' && 'Manage your buyer identity, inquiries, and merchant tools.'}
           {mode === 'success' && 'Authentication complete! Redirecting to marketplace...'}
         </p>
       </div>
 
       {/* Card Container */}
-      <div className="bg-white py-7 px-6 shadow-xs border border-slate-200/90 rounded-2xl space-y-5">
+      <div className="bg-white py-7 px-6 sm:px-8 shadow-xs border border-slate-200/90 rounded-2xl space-y-5">
         {/* Alerts */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-xl font-medium">
@@ -251,7 +352,7 @@ function AuthContent() {
 
         {/* ── MODE: SIGN IN / SIGN UP TABS ── */}
         {(mode === 'signin' || mode === 'signup') && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Tab Switcher */}
             <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl text-xs font-bold">
               <button
@@ -282,6 +383,43 @@ function AuthContent() {
               >
                 Create Account
               </button>
+            </div>
+
+            {/* Google OAuth Button */}
+            <div>
+              <button
+                type="button"
+                onClick={handleGoogleAuth}
+                disabled={googleLoading}
+                className="w-full bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold text-xs sm:text-sm py-3 px-4 rounded-xl transition-all shadow-2xs flex items-center justify-center gap-3 cursor-pointer"
+              >
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span>{googleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
+              </button>
+
+              <div className="relative flex items-center justify-center my-4">
+                <div className="border-t border-slate-200 w-full" />
+                <span className="bg-white px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  or with email
+                </span>
+              </div>
             </div>
 
             {/* SIGN IN FORM */}
@@ -324,7 +462,7 @@ function AuthContent() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-xs"
+                  className="w-full bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-xs cursor-pointer"
                 >
                   {loading ? 'Signing in...' : 'Sign In'}
                 </button>
@@ -393,7 +531,7 @@ function AuthContent() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-xs"
+                  className="w-full bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-xs cursor-pointer"
                 >
                   {loading ? 'Creating Account...' : 'Create Account'}
                 </button>
@@ -420,7 +558,7 @@ function AuthContent() {
                 type="button"
                 disabled={resending}
                 onClick={handleResendVerification}
-                className="w-full bg-white border border-slate-300 hover:border-slate-400 text-[#111111] font-semibold text-xs py-3 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2"
+                className="w-full bg-white border border-slate-300 hover:border-slate-400 text-[#111111] font-semibold text-xs py-3 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${resending ? 'animate-spin' : ''}`} />
                 <span>{resending ? 'Resending Link...' : 'Resend Verification Email'}</span>
@@ -432,7 +570,7 @@ function AuthContent() {
                   setMode('signin');
                   setError(null);
                 }}
-                className="w-full text-xs font-semibold text-[#667085] hover:text-[#087443] py-2 transition-colors"
+                className="w-full text-xs font-semibold text-[#667085] hover:text-[#087443] py-2 transition-colors cursor-pointer"
               >
                 ← Back to Sign In
               </button>
@@ -487,9 +625,9 @@ function AuthContent() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-bold text-[#111111]">
-                  Phone Number
+                  WhatsApp Phone Number
                 </label>
-                <span className="text-[10px] text-slate-500 font-medium">(Optional)</span>
+                <span className="text-[10px] text-slate-500 font-medium">(Optional for trade inquiries)</span>
               </div>
               <div className="relative flex items-center">
                 <Phone className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -506,11 +644,154 @@ function AuthContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-xs"
+              className="w-full bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-xs cursor-pointer"
             >
               {loading ? 'Saving Profile...' : 'Complete Profile & Enter Marketplace'}
             </button>
           </form>
+        )}
+
+        {/* ── MODE: AUTHENTICATED ACCOUNT HUB ── */}
+        {mode === 'account-hub' && (
+          <div className="space-y-6">
+            {/* Identity Profile Banner */}
+            <div className="bg-gradient-to-br from-[#053D24] to-[#087443] text-white p-5 rounded-2xl shadow-sm space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-white text-[#087443] font-black text-2xl flex items-center justify-center shadow-md shrink-0">
+                  {fullName ? fullName.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base sm:text-lg font-black text-white truncate">
+                      {fullName || 'EBS Member'}
+                    </h2>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-white/20 text-emerald-100 px-2 py-0.5 rounded-md border border-white/10">
+                      <CheckCircle2 className="w-3 h-3 text-[#FBBF24]" />
+                      <span>{sellerInfo?.isSeller ? 'Verified Merchant' : 'Campus Buyer'}</span>
+                    </span>
+                  </div>
+                  <p className="text-xs text-emerald-200 truncate mt-0.5">{email}</p>
+                </div>
+              </div>
+
+              {/* Identity Details Row (Campus + WhatsApp) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3 border-t border-emerald-700/50 text-xs">
+                <div className="bg-black/20 rounded-xl px-3 py-2 flex items-center gap-2">
+                  <MapPin className="w-3.5 h-3.5 text-[#FBBF24] shrink-0" />
+                  <div className="min-w-0">
+                    <span className="text-[10px] text-emerald-200/70 block font-semibold">Campus Location</span>
+                    <span className="text-white font-bold truncate block">{location}</span>
+                  </div>
+                </div>
+
+                <div className="bg-black/20 rounded-xl px-3 py-2 flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-[#FBBF24] shrink-0" />
+                  <div className="min-w-0">
+                    <span className="text-[10px] text-emerald-200/70 block font-semibold">WhatsApp Number</span>
+                    <span className="text-white font-bold truncate block">{phone || 'Not added yet'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Profile Edit Button */}
+              <button
+                type="button"
+                onClick={() => setMode('profile-complete')}
+                className="w-full bg-white/10 hover:bg-white/20 text-emerald-100 text-xs font-semibold py-2 rounded-xl transition-colors text-center cursor-pointer"
+              >
+                ✏️ Edit Profile Details / WhatsApp Number
+              </button>
+            </div>
+
+            {/* Seller CTA or Seller Dashboard Card */}
+            {sellerInfo?.isSeller ? (
+              <div className="bg-[#E8F5EF] border border-[#087443]/30 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#087443]">
+                    <Store className="w-4 h-4" />
+                    <span>Your Store: {sellerInfo.shops[0]?.name}</span>
+                  </div>
+                  <span className="text-[10px] font-bold bg-[#087443] text-white px-2 py-0.5 rounded-full">
+                    Merchant Active
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    href="/seller/dashboard"
+                    className="bg-[#087443] hover:bg-[#065f37] text-white font-bold text-xs py-2.5 px-3 rounded-xl text-center shadow-xs transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    <span>Seller Dashboard</span>
+                  </Link>
+                  <Link
+                    href="/seller/products"
+                    className="bg-white border border-[#087443]/30 hover:border-[#087443] text-[#087443] font-bold text-xs py-2.5 px-3 rounded-xl text-center transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <span>Inventory</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-[#FAFAF8] border border-amber-200/80 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#FBBF24]" />
+                  <h3 className="text-xs font-bold text-slate-800">Want to sell on campus?</h3>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  Start your own verified campus storefront in 2 minutes. Reach students in UNEC, UNN, and Enugu metropolis.
+                </p>
+                <Link
+                  href="/create-shop"
+                  className="block w-full bg-[#087443] hover:bg-[#065f37] text-white font-bold text-xs py-2.5 px-3 rounded-xl text-center shadow-xs transition-all"
+                >
+                  Create Storefront Now &rarr;
+                </Link>
+              </div>
+            )}
+
+            {/* Buyer Quick Links */}
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Buyer Activities
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/conversations"
+                  className="bg-[#FAFAF8] hover:bg-slate-100 border border-slate-200 p-3 rounded-xl transition-all flex items-center gap-2.5 text-xs font-bold text-slate-800"
+                >
+                  <MessageCircle className="w-4 h-4 text-[#087443]" />
+                  <span>Student Inbox</span>
+                </Link>
+                <Link
+                  href="/browse"
+                  className="bg-[#FAFAF8] hover:bg-slate-100 border border-slate-200 p-3 rounded-xl transition-all flex items-center gap-2.5 text-xs font-bold text-slate-800"
+                >
+                  <LayoutGrid className="w-4 h-4 text-[#087443]" />
+                  <span>Browse Catalog</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Logout Action */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+              <Link
+                href="/"
+                className="text-xs font-semibold text-[#087443] hover:underline"
+              >
+                ← Back to Marketplace
+              </Link>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
         )}
 
         {/* ── MODE: SUCCESS ── */}
