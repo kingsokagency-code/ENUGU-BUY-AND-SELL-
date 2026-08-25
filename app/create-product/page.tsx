@@ -37,7 +37,7 @@ function CreateProductForm() {
         const res = await fetch('/api/shops?owner=true');
         const data = await res.json();
         if (res.status === 401) {
-          setError('Please Sign In with your phone number to add products.');
+          setError('Authentication required. Please Sign In to add products.');
         } else {
           const ownedList = data.shops ?? [];
           setShops(ownedList);
@@ -185,7 +185,7 @@ function CreateProductForm() {
                   <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-xl flex items-center justify-between gap-2 font-medium">
                     <span>{error}</span>
                     {error.includes('Sign In') && (
-                      <Link href="/auth" className="bg-[#087443] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
+                      <Link href="/auth?redirect=/create-product" className="bg-[#087443] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
                         Sign In Now
                       </Link>
                     )}

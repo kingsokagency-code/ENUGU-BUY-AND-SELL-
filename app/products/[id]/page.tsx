@@ -104,7 +104,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       const data = await res.json();
 
       if (res.status === 401) {
-        setChatError('Please sign in with your phone number to message the seller.');
+        setChatError('Please sign in to message the seller.');
       } else if (!res.ok) {
         setChatError(data.error || 'Failed to initiate conversation');
       } else if (data.conversation?.id) {

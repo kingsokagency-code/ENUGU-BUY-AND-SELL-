@@ -7,11 +7,10 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
-  MapPin,
   Sparkles,
-  ArrowRight,
-  TrendingUp,
   ExternalLink,
+  ShieldCheck,
+  Lock,
 } from 'lucide-react';
 
 interface DealItem {
@@ -30,6 +29,11 @@ interface DealItem {
 }
 
 export default function DashboardPage() {
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean | null>(null);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminAuthLoading, setAdminAuthLoading] = useState(false);
+  const [adminAuthError, setAdminAuthError] = useState<string | null>(null);
+
   const [activeTab, setActiveTab] = useState<'deals' | 'overview'>('deals');
   const [deals, setDeals] = useState<DealItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +48,53 @@ export default function DashboardPage() {
   const [isVerified, setIsVerified] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Verify Admin Session on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function checkAdminAuth() {
+      try {
+        const res = await fetch('/api/insights');
+        if (isMounted) {
+          setIsAdminAuthenticated(res.ok);
+        }
+      } catch {
+        if (isMounted) {
+          setIsAdminAuthenticated(false);
+        }
+      }
+    }
+    checkAdminAuth();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminAuthError(null);
+    setAdminAuthLoading(true);
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsAdminAuthenticated(true);
+        fetchDeals();
+      } else {
+        setAdminAuthError(data.error || 'Invalid admin credentials. Access denied.');
+      }
+    } catch {
+      setAdminAuthError('Server error while authenticating admin.');
+    } finally {
+      setAdminAuthLoading(false);
+    }
+  };
 
   // Fetch all live deals
   const fetchDeals = useCallback(async () => {
@@ -162,6 +213,80 @@ export default function DashboardPage() {
     'Ogui Road, Enugu',
     'Gariki, Enugu',
   ];
+
+  // 1. Loading State
+  if (isAdminAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-[#F8FAF9] flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-3 border-[#087443] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold text-slate-600">Verifying administrator credentials...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Admin Login Gate (BLOCKED)
+  if (!isAdminAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#F8FAF9] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white border border-slate-200/90 rounded-2xl p-8 shadow-sm text-center space-y-6">
+          <div className="w-14 h-14 rounded-2xl bg-[#E8F5EF] text-[#087443] flex items-center justify-center mx-auto border border-[#087443]/20 shadow-inner">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h1 className="text-xl font-black text-slate-900 tracking-tight">
+              Admin Command Center
+            </h1>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Enter your secure administrator master key to access live operations, deal controls, and campus metrics.
+            </p>
+          </div>
+
+          {adminAuthError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-xl font-medium">
+              {adminAuthError}
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLogin} className="space-y-4 text-left">
+            <div>
+              <label className="block text-xs font-bold text-slate-800 mb-1">
+                Admin Password / Master Key
+              </label>
+              <div className="relative flex items-center">
+                <Lock className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••••••"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-slate-900 rounded-xl pl-10 pr-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-[#087443]/15 transition-all font-medium"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={adminAuthLoading}
+              className="w-full bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>{adminAuthLoading ? 'Authenticating...' : 'Unlock Admin Center'}</span>
+            </button>
+          </form>
+
+          <Link
+            href="/"
+            className="block text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+          >
+            ← Back to Marketplace
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAF9] text-[#111827] pb-16">

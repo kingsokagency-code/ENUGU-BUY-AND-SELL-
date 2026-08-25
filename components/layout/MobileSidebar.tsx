@@ -14,7 +14,7 @@ import {
   Package,
   Settings,
   HelpCircle,
-  LogOut,
+  User,
   CheckCircle2,
   BarChart3,
   Plus,
@@ -112,15 +112,15 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
               </nav>
             </div>
 
-            {/* Bottom Logout */}
+            {/* Bottom Account */}
             <div className="pt-6 border-t border-emerald-800/60">
               <Link
                 href="/auth"
                 onClick={onClose}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-red-300 hover:bg-red-500/20 transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-emerald-200 hover:bg-emerald-800/40 transition-colors"
               >
-                <LogOut className="w-4 h-4 text-red-400" />
-                <span>Sign Out</span>
+                <User className="w-4 h-4 text-emerald-300" />
+                <span>Account / Sign In</span>
               </Link>
             </div>
           </motion.div>

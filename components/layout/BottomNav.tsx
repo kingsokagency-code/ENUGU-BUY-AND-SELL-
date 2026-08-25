@@ -12,7 +12,7 @@ export function BottomNav() {
     { label: 'Categories', href: '/browse', icon: LayoutGrid },
     { label: 'Sell', href: '/create-product', icon: Plus, isCenter: true },
     { label: 'Inbox', href: '/conversations', icon: MessageCircle },
-    { label: 'Profile', href: '/seller/dashboard', icon: User },
+    { label: 'Profile', href: '/auth', icon: User },
   ];
 
   return (

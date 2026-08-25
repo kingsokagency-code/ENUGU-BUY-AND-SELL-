@@ -37,7 +37,7 @@ export default function CreateShopPage() {
       const data = await res.json();
 
       if (res.status === 401) {
-        setError('Seller authentication required. Please Sign In with your phone number first.');
+        setError('Authentication required. Please Sign In to register your campus storefront.');
       } else if (!res.ok) {
         setError(data.error || 'Failed to create shop');
       } else {
@@ -115,7 +115,7 @@ export default function CreateShopPage() {
                   <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-xl flex items-center justify-between gap-2">
                     <span>{error}</span>
                     {error.includes('Sign In') && (
-                      <Link href="/auth" className="bg-[#087443] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
+                      <Link href="/auth?redirect=/create-shop" className="bg-[#087443] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
                         Sign In Now
                       </Link>
                     )}

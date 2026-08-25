@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/brand/Logo';
+import { getCurrentUser, checkUserSellerStatus, signOut, type SellerStatus } from '@/lib/auth';
 import {
   LayoutDashboard,
   Package,
@@ -23,6 +25,8 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
+  Store,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface ProductRow {
@@ -111,10 +115,55 @@ const INITIAL_PRODUCTS: ProductRow[] = [
 ];
 
 export default function MyProductsPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'All' | 'Active' | 'Draft' | 'Out of Stock' | 'Sold'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [products, setProducts] = useState<ProductRow[]>(INITIAL_PRODUCTS);
+
+  const [authState, setAuthState] = useState<{
+    loading: boolean;
+    isAuthenticated: boolean;
+    isSeller: boolean;
+    sellerData: SellerStatus | null;
+  }>({
+    loading: true,
+    isAuthenticated: false,
+    isSeller: false,
+    sellerData: null,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function verifySeller() {
+      const { user, error } = await getCurrentUser();
+      if (error || !user) {
+        if (isMounted) {
+          setAuthState({ loading: false, isAuthenticated: false, isSeller: false, sellerData: null });
+        }
+        return;
+      }
+
+      const sellerStatus = await checkUserSellerStatus(user.id);
+      if (isMounted) {
+        setAuthState({
+          loading: false,
+          isAuthenticated: true,
+          isSeller: sellerStatus.isSeller,
+          sellerData: sellerStatus,
+        });
+      }
+    }
+    verifySeller();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/auth');
+  };
 
   useEffect(() => {
     async function loadLiveProducts() {
@@ -141,6 +190,88 @@ export default function MyProductsPage() {
     }
     loadLiveProducts();
   }, []);
+
+  // 1. Loading State
+  if (authState.loading) {
+    return (
+      <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-3 border-[#087443] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold text-slate-600">Verifying inventory access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated State (BLOCKED)
+  if (!authState.isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white border border-slate-200/90 rounded-2xl p-8 shadow-sm text-center space-y-5">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200 shadow-inner">
+            <ShieldAlert className="w-7 h-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h1 className="text-xl font-black text-slate-900 tracking-tight">
+              Seller Authentication Required
+            </h1>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              You must be signed in to manage your inventory and product listings.
+            </p>
+          </div>
+          <div className="pt-2 space-y-2.5">
+            <Link
+              href="/auth?redirect=/seller/products"
+              className="block w-full bg-[#087443] hover:bg-[#065f37] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-xs"
+            >
+              Sign In to Continue &rarr;
+            </Link>
+            <Link
+              href="/"
+              className="block text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+            >
+              ← Back to Marketplace
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Authenticated but owns 0 stores (NON-SELLER BLOCKED)
+  if (!authState.isSeller) {
+    return (
+      <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white border border-slate-200/90 rounded-2xl p-8 shadow-sm text-center space-y-5">
+          <div className="w-14 h-14 rounded-2xl bg-[#E8F5EF] text-[#087443] flex items-center justify-center mx-auto border border-[#087443]/20 shadow-inner">
+            <Store className="w-7 h-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h1 className="text-xl font-black text-slate-900 tracking-tight">
+              Storefront Required
+            </h1>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              To list and manage products, you must first register your campus store.
+            </p>
+          </div>
+          <div className="pt-2 space-y-2.5">
+            <Link
+              href="/create-shop"
+              className="block w-full bg-[#087443] hover:bg-[#065f37] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-xs"
+            >
+              Create Campus Store &rarr;
+            </Link>
+            <Link
+              href="/"
+              className="block text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+            >
+              ← Return to Marketplace
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Filter products by tab and search
   const filteredProducts = products.filter((p) => {
@@ -274,13 +405,14 @@ export default function MyProductsPage() {
             <HelpCircle className="w-4 h-4" />
             <span>Help &amp; Support</span>
           </Link>
-          <Link
-            href="/auth"
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-red-300 hover:bg-red-500/20 transition-colors"
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-red-300 hover:bg-red-500/20 transition-colors text-left cursor-pointer"
           >
             <LogOut className="w-4 h-4 text-red-400" />
             <span>Logout</span>
-          </Link>
+          </button>
         </div>
       </aside>
 

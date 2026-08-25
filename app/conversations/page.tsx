@@ -120,14 +120,14 @@ export default function ConversationsPage() {
         <div className="space-y-1.5">
           <h1 className="text-xl font-bold text-[#111111]">Sign In to View Messages</h1>
           <p className="text-xs text-[#667085]">
-            Sign in with your phone number to access your buyer conversations and merchant inquiries.
+            Sign in to access your buyer conversations and merchant inquiries.
           </p>
         </div>
         <Link
-          href="/auth"
+          href="/auth?redirect=/conversations"
           className="inline-flex items-center justify-center bg-[#087443] hover:bg-[#065f37] text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-xs transition-all w-full"
         >
-          Sign In with Phone Number &rarr;
+          Sign In to Your Account &rarr;
         </Link>
       </div>
     );

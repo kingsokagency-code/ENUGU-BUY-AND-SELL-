@@ -45,7 +45,7 @@ export function ReportModal({
 
       const data = await res.json();
       if (res.status === 401) {
-        setError('Please sign in with your phone number to submit a report.');
+        setError('Please sign in to submit a report.');
       } else if (!res.ok) {
         setError(data.error || 'Failed to submit report');
       } else {

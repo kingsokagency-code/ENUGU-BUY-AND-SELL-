@@ -80,7 +80,26 @@ let dealsStore: DealItem[] = [
   },
 ];
 
-// GET: Fetch all active live deals
+function verifyAdminAuth(req: NextRequest | Request): boolean {
+  const expectedKey = process.env.INSIGHTS_ADMIN_KEY || process.env.DASHBOARD_PASSWORD;
+  if (!expectedKey) return false;
+
+  let adminCookie: string | undefined;
+  if ('cookies' in req && typeof req.cookies?.get === 'function') {
+    adminCookie = req.cookies.get('ebs_admin_session')?.value;
+  } else {
+    const cookieHeader = req.headers.get('cookie');
+    adminCookie = cookieHeader
+      ?.split(';')
+      .find((c) => c.trim().startsWith('ebs_admin_session='))
+      ?.split('=')[1];
+  }
+
+  const adminHeader = req.headers.get('x-admin-key');
+  return adminCookie === expectedKey || adminHeader === expectedKey;
+}
+
+// GET: Fetch all active live deals (PUBLIC)
 export async function GET() {
   return NextResponse.json({
     success: true,
@@ -90,9 +109,17 @@ export async function GET() {
   });
 }
 
-// POST: Add a new live deal from Admin Dashboard
+// POST: Add a new live deal from Admin Dashboard (ADMIN ONLY)
 export async function POST(req: NextRequest) {
   try {
+    const isAuthorized = await verifyAdminAuth(req);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin authentication required to create deals.' },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const {
       name,
@@ -149,9 +176,17 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE: Remove a deal by ID
+// DELETE: Remove a deal by ID (ADMIN ONLY)
 export async function DELETE(req: NextRequest) {
   try {
+    const isAuthorized = await verifyAdminAuth(req);
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin authentication required to remove deals.' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 

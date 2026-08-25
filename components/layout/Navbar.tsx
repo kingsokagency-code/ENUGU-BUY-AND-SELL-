@@ -146,7 +146,7 @@ export function Navbar() {
 
             {/* Account */}
             <Link
-              href="/dashboard"
+              href="/auth"
               className="hidden sm:flex flex-col items-center gap-0.5 text-slate-600 hover:text-[#087443] transition-colors"
             >
               <User className="w-5 h-5 stroke-[1.8]" />
