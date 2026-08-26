@@ -44,8 +44,10 @@ export function Navbar() {
   const navLinks = [
     { label: 'Home', href: '/' },
     { label: 'Categories', href: '/browse' },
-    { label: 'Deals', href: '/browse?filter=deals' },
+    { label: 'Hot Deals', href: '/browse?filter=deals', badge: 'HOT' },
     { label: 'Stores', href: '/shops' },
+    { label: 'Recently Listed', href: '/browse?sort=recent' },
+    { label: 'About EBS', href: '/about' },
   ];
 
   return (
@@ -78,8 +80,9 @@ export function Navbar() {
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
+              {/* Dropdown Menu */}
               {categoryDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-lg py-1.5 z-50">
+                <div className="absolute left-0 top-full mt-2 w-48 rounded-xl bg-white p-1.5 shadow-xl border border-slate-100 z-50">
                   {categories.map((cat) => (
                     <button
                       key={cat}
@@ -88,8 +91,10 @@ export function Navbar() {
                         setSelectedCategory(cat);
                         setCategoryDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors cursor-pointer ${
-                        selectedCategory === cat ? 'text-[#087443] font-bold bg-[#E8F5EF]' : 'text-slate-700 hover:bg-slate-50'
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                        selectedCategory === cat
+                          ? 'bg-[#E8F5EF] text-[#087443] font-bold'
+                          : 'text-slate-700 hover:bg-slate-50'
                       }`}
                     >
                       {cat}
@@ -146,7 +151,7 @@ export function Navbar() {
 
             {/* Account */}
             <Link
-              href="/auth"
+              href="/account"
               className="hidden sm:flex flex-col items-center gap-0.5 text-slate-600 hover:text-[#087443] transition-colors"
             >
               <User className="w-5 h-5 stroke-[1.8]" />
@@ -174,7 +179,7 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* ── SUB-NAVIGATION ROW: Home (Active), Categories, Deals, Stores ── */}
+        {/* ── SUB-NAVIGATION ROW: Home (Active), Categories, Hot Deals [HOT], Stores, Recently Listed, About EBS ── */}
         <nav className="hidden md:flex border-t border-slate-100 bg-white">
           <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 flex items-center gap-8 text-xs font-semibold text-slate-600">
             {navLinks.map((link) => {
@@ -183,11 +188,16 @@ export function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`py-3 transition-colors relative ${
+                  className={`py-3 transition-colors relative flex items-center gap-1.5 ${
                     isActive ? 'text-[#087443] font-bold' : 'hover:text-[#087443]'
                   }`}
                 >
                   <span>{link.label}</span>
+                  {link.badge && (
+                    <span className="bg-[#EF4444] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none">
+                      {link.badge}
+                    </span>
+                  )}
                   {isActive && (
                     <span className="absolute bottom-0 left-0 w-full h-[2.5px] bg-[#087443] rounded-t-full" />
                   )}

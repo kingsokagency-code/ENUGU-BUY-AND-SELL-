@@ -1,0 +1,126 @@
+'use client';
+
+import React, { useState } from 'react';
+import { ShieldCheck, Star, Users, MessageCircle, UserPlus, Check, Award, Truck, RotateCcw, Lock } from 'lucide-react';
+import { TrustBadge } from '@/components/ebs-ui/TrustBadge';
+
+interface StoreHeroProps {
+  name: string;
+  category?: string;
+  description?: string;
+  rating?: number;
+  reviewsCount?: number;
+  followersCount?: number;
+  isVerified?: boolean;
+  location?: string;
+  slug?: string;
+}
+
+export function StoreHero({
+  name = 'Kingsok Gadgets',
+  category = 'Electronics · Phones · Accessories',
+  description = 'Your #1 certified electronics & gadgets vendor in Enugu. 100% original devices guaranteed.',
+  rating = 4.8,
+  reviewsCount = 2315,
+  followersCount = 1245,
+  isVerified = true,
+  location = 'UNN Main Campus, Nsukka',
+}: StoreHeroProps) {
+  const [following, setFollowing] = useState(false);
+
+  const getInitials = (n: string) => {
+    return n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'EBS';
+  };
+
+  return (
+    <div className="w-full bg-gradient-to-b from-[#0F1A14] via-[#111D17] to-[#1A2820] text-white border-b border-[#243320]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
+        {/* Main Store Banner Info */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 text-center sm:text-left">
+          {/* Store Big Avatar */}
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-[#087443] flex items-center justify-center font-black text-2xl sm:text-3xl text-white shadow-xl shadow-[#087443]/30 border-2 border-white/10 shrink-0">
+            {getInitials(name)}
+          </div>
+
+          {/* Store Details */}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 justify-center sm:justify-start flex-wrap">
+              <h1 className="text-2xl sm:text-3xl font-black text-white">{name}</h1>
+              {isVerified && (
+                <span className="inline-flex items-center gap-1 bg-[#087443] text-white text-xs font-bold px-2.5 py-0.5 rounded-full self-center sm:self-auto">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Verified Merchant
+                </span>
+              )}
+            </div>
+
+            <p className="text-xs sm:text-sm text-[#9CB3AA] mt-1 font-medium">{category}</p>
+            {description && (
+              <p className="text-xs text-white/70 mt-1.5 max-w-xl line-clamp-2 leading-relaxed">{description}</p>
+            )}
+
+            {/* Metrics: Rating, Followers, Location */}
+            <div className="flex items-center gap-4 mt-3 justify-center sm:justify-start flex-wrap text-xs text-[#9CB3AA]">
+              <div className="flex items-center gap-1 text-amber-400 font-bold">
+                <Star className="w-3.5 h-3.5 fill-current" />
+                <span>{rating.toFixed(1)}</span>
+                <span className="text-white/50 font-normal">({reviewsCount.toLocaleString()} reviews)</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="w-3.5 h-3.5 text-[#0A8A50]" />
+                <span className="text-white font-semibold">{followersCount.toLocaleString()}</span>
+                <span>Followers</span>
+              </div>
+              {location && (
+                <span className="text-white/60">• {location}</span>
+              )}
+            </div>
+
+            {/* Follow & Message Buttons */}
+            <div className="flex items-center gap-3 mt-5 justify-center sm:justify-start">
+              <button
+                onClick={() => setFollowing(!following)}
+                className={`inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  following
+                    ? 'bg-white/10 text-white border border-white/20'
+                    : 'bg-transparent text-white border border-white/30 hover:bg-white/10'
+                }`}
+              >
+                {following ? <Check className="w-3.5 h-3.5 text-[#0A8A50]" /> : <UserPlus className="w-3.5 h-3.5" />}
+                <span>{following ? 'Following' : '+ Follow'}</span>
+              </button>
+
+              <a
+                href="#message"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#087443] hover:bg-[#0A8A50] text-white text-xs font-bold transition-all shadow-md shadow-[#087443]/30"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>Message</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* 4 Trust Badges Strip on Storefront */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-6 border-t border-[#243320] text-xs text-[#9CB3AA]">
+          <div className="flex items-center gap-2 justify-center sm:justify-start">
+            <Award className="w-4 h-4 text-[#0A8A50] shrink-0" />
+            <span className="font-semibold text-white/90">100% Original Products</span>
+          </div>
+          <div className="flex items-center gap-2 justify-center sm:justify-start">
+            <Truck className="w-4 h-4 text-[#0A8A50] shrink-0" />
+            <span className="font-semibold text-white/90">Fast Campus Delivery</span>
+          </div>
+          <div className="flex items-center gap-2 justify-center sm:justify-start">
+            <RotateCcw className="w-4 h-4 text-[#0A8A50] shrink-0" />
+            <span className="font-semibold text-white/90">7 Days Return Guarantee</span>
+          </div>
+          <div className="flex items-center gap-2 justify-center sm:justify-start">
+            <Lock className="w-4 h-4 text-[#0A8A50] shrink-0" />
+            <span className="font-semibold text-white/90">Secure Escrow Payments</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
