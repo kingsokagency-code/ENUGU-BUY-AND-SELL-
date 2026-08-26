@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Star, ShieldCheck, Users, Package, MapPin } from 'lucide-react';
+import { ArrowRight, Star, ShieldCheck, MapPin } from 'lucide-react';
 
 interface StoreItem {
   id: string;
@@ -34,10 +34,10 @@ export function TopStoresSection() {
   };
 
   return (
-    <section className="w-full bg-[#F8FAF9] py-8 sm:py-10 border-b border-[#E5EDE9]">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
+    <section className="w-full max-w-full bg-[#F8FAF9] py-6 sm:py-10 border-b border-[#E5EDE9] overflow-hidden">
+      <div className="max-w-[1440px] mx-auto px-3.5 sm:px-8 lg:px-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-amber-500 text-base">🏆</span>
@@ -56,9 +56,9 @@ export function TopStoresSection() {
         </div>
 
         {/* 4 Store Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {TOP_STORES_DATA.map((store) => {
-            const isFollowing = followed[store.id];
+            const isFollowing = !!followed[store.id];
             return (
               <Link
                 key={store.id}
@@ -66,47 +66,53 @@ export function TopStoresSection() {
                 className="bg-white rounded-2xl border border-[#E5EDE9] p-4 flex flex-col justify-between hover:border-[#087443]/40 hover:shadow-md transition-all group cursor-pointer"
               >
                 <div>
+                  {/* Top Bar: Avatar & Follow Button */}
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <div
-                      className="w-12 h-12 rounded-2xl text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0"
-                      style={{ background: store.bg }}
-                    >
-                      {store.initial}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-12 h-12 rounded-xl text-white font-black text-sm flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-103 transition-transform"
+                        style={{ background: store.bg }}
+                      >
+                        {store.initial}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1">
+                          <h3 className="text-xs sm:text-sm font-bold text-[#0D1F17] truncate group-hover:text-[#087443] transition-colors">
+                            {store.name}
+                          </h3>
+                          <ShieldCheck className="w-3.5 h-3.5 text-[#087443] shrink-0" />
+                        </div>
+                        <p className="text-[10px] text-[#9CB3AA] truncate mt-0.5">{store.category}</p>
+                      </div>
                     </div>
 
                     <button
                       onClick={(e) => toggleFollow(store.id, e)}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                      className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all shrink-0 cursor-pointer ${
                         isFollowing
-                          ? 'bg-[#E8F8EF] text-[#087443]'
-                          : 'border border-[#087443] text-[#087443] hover:bg-[#087443] hover:text-white'
+                          ? 'bg-[#087443] text-white border-[#087443]'
+                          : 'bg-white text-[#087443] border-[#087443]/30 hover:bg-[#E8F8EF]'
                       }`}
                     >
-                      {isFollowing ? 'Following ✓' : '+ Follow'}
+                      {isFollowing ? 'Following' : 'Follow'}
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="text-sm font-bold text-[#0D1F17] group-hover:text-[#087443] transition-colors truncate">
-                      {store.name}
-                    </h3>
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#087443] shrink-0" />
+                  {/* Store Location */}
+                  <div className="flex items-center gap-1 text-[11px] text-[#6B7C74] mb-3">
+                    <MapPin className="w-3 h-3 text-[#9CB3AA] shrink-0" />
+                    <span className="truncate">{store.location}</span>
                   </div>
-
-                  <p className="text-[11px] text-[#6B7C74] truncate mt-0.5">{store.category}</p>
-                  <p className="text-[10px] text-[#9CB3AA] flex items-center gap-1 mt-1">
-                    <MapPin className="w-3 h-3 text-[#9CB3AA]" />
-                    <span>{store.location}</span>
-                  </p>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] text-[#6B7C74] mt-4 pt-3 border-t border-[#E5EDE9]">
-                  <span className="flex items-center gap-1 text-amber-500 font-bold">
-                    <Star className="w-3.5 h-3.5 fill-current" />
+                {/* Bottom Row: Rating, Followers, Products */}
+                <div className="flex items-center justify-between text-[10px] text-[#6B7C74] pt-2.5 border-t border-[#E5EDE9]">
+                  <span className="flex items-center gap-0.5 text-amber-500 font-bold">
+                    <Star className="w-3 h-3 fill-current" />
                     <span>{store.rating} ({store.reviews})</span>
                   </span>
-                  <span className="text-[10px] text-[#9CB3AA]">
-                    {store.productsCount} Products
+                  <span className="text-[#9CB3AA]">
+                    {store.productsCount} products
                   </span>
                 </div>
               </Link>
@@ -117,3 +123,5 @@ export function TopStoresSection() {
     </section>
   );
 }
+
+export default TopStoresSection;

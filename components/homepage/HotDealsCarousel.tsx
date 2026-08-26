@@ -128,11 +128,11 @@ export function HotDealsCarousel() {
   }, [isPaused, scroll]);
 
   return (
-    <section className="w-full bg-[#F8FAF9] py-8 border-b border-[#E5EDE9]">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
+    <section className="w-full max-w-full bg-[#F8FAF9] py-6 sm:py-8 border-b border-[#E5EDE9] overflow-hidden">
+      <div className="max-w-[1440px] mx-auto px-3.5 sm:px-8 lg:px-12">
 
         {/* Section Header */}
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-base text-amber-500">🔥</span>
@@ -180,17 +180,17 @@ export function HotDealsCarousel() {
           onMouseLeave={() => setIsPaused(false)}
           onTouchStart={() => setIsPaused(true)}
           onTouchEnd={() => setIsPaused(false)}
-          className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-none [scrollbar-width:none] snap-x snap-mandatory"
+          className="flex gap-2.5 sm:gap-4 overflow-x-auto pb-2 scrollbar-none [scrollbar-width:none] snap-x snap-mandatory"
         >
           {DEALS.map((deal) => (
             <Link
               key={deal.id}
               href={`/products/${deal.id}`}
-              className="w-[170px] sm:w-[200px] lg:w-[220px] shrink-0 bg-white rounded-2xl border border-[#E5EDE9] overflow-hidden hover:border-[#087443]/50 hover:shadow-md transition-all flex flex-col justify-between group snap-start cursor-pointer"
+              className="w-[160px] xs:w-[175px] sm:w-[200px] lg:w-[220px] shrink-0 bg-white rounded-2xl border border-[#E5EDE9] overflow-hidden hover:border-[#087443]/50 hover:shadow-md transition-all flex flex-col justify-between group snap-start cursor-pointer shadow-2xs"
             >
               {/* Product Image Area */}
               <div
-                className="relative w-full aspect-[4/3] overflow-hidden flex items-center justify-center"
+                className="relative w-full aspect-4/3 overflow-hidden flex items-center justify-center"
                 style={{ background: deal.imageBg }}
               >
                 <Image
@@ -198,7 +198,7 @@ export function HotDealsCarousel() {
                   alt={deal.name}
                   fill
                   className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
-                  sizes="(max-width: 640px) 170px, (max-width: 1024px) 200px, 220px"
+                  sizes="(max-width: 640px) 175px, (max-width: 1024px) 200px, 220px"
                 />
                 {/* Discount badge */}
                 <div className="absolute top-2 left-2 z-10">
@@ -215,7 +215,7 @@ export function HotDealsCarousel() {
                   <p className="text-[10px] text-[#9CB3AA] truncate mt-0.5">{deal.spec}</p>
 
                   <div className="flex items-baseline gap-1.5 mt-2 flex-wrap">
-                    <span className="text-sm font-black text-[#087443]">
+                    <span className="text-xs sm:text-sm font-black text-[#087443]">
                       ₦{deal.price.toLocaleString()}
                     </span>
                     {deal.originalPrice && (
@@ -251,3 +251,5 @@ export function HotDealsCarousel() {
     </section>
   );
 }
+
+export default HotDealsCarousel;

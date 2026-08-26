@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Clock, Star, MapPin, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Clock, Star, ShieldCheck } from 'lucide-react';
 
 interface RecentProduct {
   id: string;
@@ -29,10 +29,10 @@ const RECENT_PRODUCTS: RecentProduct[] = [
 
 export function RecentlyListedSection() {
   return (
-    <section className="w-full bg-white py-8 sm:py-10 border-b border-[#E5EDE9]">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
+    <section className="w-full max-w-full bg-white py-6 sm:py-10 border-b border-[#E5EDE9] overflow-hidden">
+      <div className="max-w-[1440px] mx-auto px-3.5 sm:px-8 lg:px-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-amber-500 font-black text-base">⚡</span>
@@ -50,13 +50,13 @@ export function RecentlyListedSection() {
           </Link>
         </div>
 
-        {/* 6-Card Grid on Desktop, Smooth Scroll on Mobile */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-4">
+        {/* 6-Card Grid on Desktop, 2-Col Grid on Mobile */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
           {RECENT_PRODUCTS.map((product) => (
             <Link
               key={product.id}
               href={`/products/${product.id}`}
-              className="bg-[#F8FAF9] rounded-2xl border border-[#E5EDE9] p-3 flex flex-col justify-between hover:bg-white hover:border-[#087443]/40 hover:shadow-md transition-all group cursor-pointer"
+              className="bg-[#F8FAF9] rounded-2xl border border-[#E5EDE9] p-2.5 sm:p-3 flex flex-col justify-between hover:bg-white hover:border-[#087443]/40 hover:shadow-md transition-all group cursor-pointer"
             >
               <div>
                 {/* Product Visual Container & Time Ago Badge */}
@@ -81,7 +81,7 @@ export function RecentlyListedSection() {
               </div>
 
               <div className="flex items-center justify-between text-[10px] text-[#6B7C74] mt-2.5 pt-2 border-t border-[#E5EDE9]">
-                <span className="flex items-center gap-0.5 truncate max-w-[90px]">
+                <span className="flex items-center gap-0.5 truncate max-w-[80px] sm:max-w-[90px]">
                   {product.isVerified && <ShieldCheck className="w-3 h-3 text-[#087443] shrink-0" />}
                   <span className="truncate">{product.seller}</span>
                 </span>
@@ -97,3 +97,5 @@ export function RecentlyListedSection() {
     </section>
   );
 }
+
+export default RecentlyListedSection;

@@ -24,31 +24,31 @@ const MOBILE_NAV_ITEMS = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#F8FAF9] flex flex-col">
+    <div className="min-h-screen bg-[#F8FAF9] flex flex-col w-full max-w-full overflow-x-hidden">
       {/* ── 1. Single Master Navbar ── */}
       <Navbar />
 
-      {/* ── 2. Main Marketplace Flow ── */}
-      <main className="flex-1 pb-20 md:pb-0">
-        {/* Hero Area: Left Intro + Right Live Hot Deals Centerpiece Carousel */}
+      {/* ── 2. Main Marketplace Flow (Static locked viewport, zero horizontal shift) ── */}
+      <main className="flex-1 pb-20 md:pb-0 w-full max-w-full overflow-x-hidden">
+        {/* 1. Hero Area: Left Intro + Right Live Hot Deals Centerpiece Carousel */}
         <AboveTheFold />
 
-        {/* Shop by Category: 9 Cards */}
+        {/* 2. Shop by Category: 9 Cards */}
         <CategoryGrid />
 
-        {/* Recently Listed: Dedicated Section with Timestamps */}
+        {/* 3. Recently Listed: Dedicated Section with Timestamps */}
         <RecentlyListedSection />
 
-        {/* Top Stores: Dedicated Section with Verified Merchants */}
+        {/* 4. Top Stores: Dedicated Section with Verified Merchants */}
         <TopStoresSection />
 
-        {/* Hot Deals: Dedicated Discovery Strip */}
+        {/* 5. Hot Deals: Dedicated Discovery Strip */}
         <HotDealsCarousel />
 
-        {/* Trust Strip: 4 Pillars */}
+        {/* 6. Trust Strip: 4 Pillars */}
         <TrustStrip />
 
-        {/* Sell CTA: Digital Storefront Banner */}
+        {/* 7. Sell CTA: Digital Storefront Banner */}
         <SellCTA />
       </main>
 

@@ -19,7 +19,6 @@ import {
   Clock,
   Package,
 } from 'lucide-react';
-import { DiscountBadge } from '@/components/ebs-ui/Badge';
 
 /* ─────────────────────────────────────────────────────────────
    STATS ROW (Desktop)
@@ -121,7 +120,7 @@ export function AboveTheFold() {
   const [slideVisible, setSlideVisible] = useState(true);
   const [isWishlisted, setIsWishlisted] = useState<Record<string, boolean>>({});
 
-  // Lazy initializer to avoid setState in effect body
+  // Lazy initializer for reduced motion
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -129,6 +128,7 @@ export function AboveTheFold() {
 
   const touchStartX = useRef<number | null>(null);
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalSlides = HOT_DEALS_SLIDES.length;
 
   // Runtime OS motion preferences listener
@@ -139,18 +139,21 @@ export function AboveTheFold() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  /* Smooth Fade + Slide transition */
+  /* Clean Fade/Slide transition — strictly ONE product rendered */
   const goToSlide = useCallback(
     (idx: number) => {
       if (prefersReducedMotion) {
         setCurrentSlide(idx);
         return;
       }
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
+      }
       setSlideVisible(false);
-      setTimeout(() => {
+      transitionTimeoutRef.current = setTimeout(() => {
         setCurrentSlide(idx);
         setSlideVisible(true);
-      }, 200);
+      }, 150);
     },
     [prefersReducedMotion]
   );
@@ -163,7 +166,7 @@ export function AboveTheFold() {
     goToSlide((currentSlide - 1 + totalSlides) % totalSlides);
   }, [currentSlide, totalSlides, goToSlide]);
 
-  // Autoplay — pauses during user interaction/hover
+  // Autoplay — pauses during hover or touch interaction
   useEffect(() => {
     if (isPaused || prefersReducedMotion) return;
     autoPlayRef.current = setInterval(nextSlide, 5000);
@@ -171,6 +174,13 @@ export function AboveTheFold() {
       if (autoPlayRef.current) clearInterval(autoPlayRef.current);
     };
   }, [isPaused, nextSlide, prefersReducedMotion]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
+    };
+  }, []);
 
   // Touch swipe support
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -193,37 +203,37 @@ export function AboveTheFold() {
   const deal = HOT_DEALS_SLIDES[currentSlide].featured;
 
   return (
-    <section className="w-full bg-white border-b border-[#E5EDE9]">
+    <section className="w-full bg-white border-b border-[#E5EDE9] overflow-hidden">
 
       {/*
         ══════════════════════════════════════════════════════
-        1. MOBILE VIEW (< lg) — EXACT MOCKUP IMPLEMENTATION
+        1. MOBILE VIEW (< lg) — FITTED FOR 320px - 430px+
         
         Strict Mobile Hierarchy:
-        1. Hero Badge + Headline + Subtitle
+        1. Hero Badge + Headline + Subtitle + "Safe. Fast. Local."
         2. Primary CTAs: [ Shop Now → ] [ Start Selling ] SIDE-BY-SIDE
-        3. Hot Deals Section (Dark Green card with inner white deal card)
+        3. Hot Deals Section (Dark Green Card with Inner White Card)
         4. Trust Features Strip: Verified Deals | Local Sellers | Quality Listings
         ══════════════════════════════════════════════════════
       */}
-      <div className="lg:hidden px-4 pt-4 pb-6 space-y-4">
+      <div className="lg:hidden px-3 sm:px-4 pt-4 pb-6 space-y-4 max-w-full overflow-hidden">
         
         {/* ── 1. HERO SECTION ── */}
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {/* Trust Badge Pill */}
-          <div className="inline-flex items-center gap-1.5 bg-[#E8F8EF] text-[#087443] text-xs font-bold px-3 py-1 rounded-full border border-[#087443]/15">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#087443]" />
-            <span>The trusted marketplace in Enugu</span>
+          <div className="inline-flex items-center gap-1.5 bg-[#E8F8EF] text-[#087443] text-[11px] sm:text-xs font-bold px-3 py-1 rounded-full border border-[#087443]/15">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#087443] shrink-0" />
+            <span className="truncate">The trusted marketplace in Enugu</span>
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-[2.1rem] sm:text-4xl leading-[1.08] font-black text-[#053D24] tracking-tight">
+          <h1 className="text-[1.85rem] xs:text-[2.1rem] sm:text-4xl leading-[1.08] font-black text-[#053D24] tracking-tight">
             Buy, Sell &amp; Discover<br />
             Anything in <span className="text-[#087443]">Enugu</span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-sm font-medium text-[#6B7C74] leading-snug">
+          <p className="text-xs sm:text-sm font-medium text-[#6B7C74] leading-snug">
             The trusted marketplace for everyone.
           </p>
 
@@ -233,27 +243,27 @@ export function AboveTheFold() {
         </div>
 
         {/* ── 2. PRIMARY CTAs — SIDE BY SIDE (DO NOT STACK) ── */}
-        <div className="grid grid-cols-2 gap-3 pt-1">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 pt-0.5">
           <Link
             href="/browse"
-            className="flex items-center justify-center gap-1.5 bg-[#053D24] hover:bg-[#032817] active:scale-[.98] text-white text-xs sm:text-sm font-bold py-3.5 px-3 rounded-2xl transition-all shadow-md shadow-[#053D24]/20 text-center"
+            className="flex items-center justify-center gap-1.5 bg-[#053D24] hover:bg-[#032817] active:scale-[.98] text-white text-xs sm:text-sm font-bold py-3.5 px-2.5 rounded-2xl transition-all shadow-md shadow-[#053D24]/20 text-center min-w-0"
           >
             <ShoppingBag className="w-4 h-4 shrink-0" />
             <span className="truncate">Shop Now &rarr;</span>
           </Link>
           <Link
             href="/create-shop"
-            className="flex items-center justify-center gap-1.5 bg-white border-2 border-[#053D24] hover:bg-[#053D24] hover:text-white active:scale-[.98] text-[#053D24] text-xs sm:text-sm font-bold py-3.5 px-3 rounded-2xl transition-all text-center"
+            className="flex items-center justify-center gap-1.5 bg-white border-2 border-[#053D24] hover:bg-[#053D24] hover:text-white active:scale-[.98] text-[#053D24] text-xs sm:text-sm font-bold py-3.5 px-2.5 rounded-2xl transition-all text-center min-w-0"
           >
             <Store className="w-4 h-4 shrink-0" />
             <span className="truncate">Start Selling</span>
           </Link>
         </div>
 
-        {/* ── 3. HOT DEALS SECTION (DARK GREEN CARD WITH INNER WHITE CARD) ── */}
-        <div className="pt-1">
+        {/* ── 3. HOT DEALS SECTION (DARK GREEN CONTAINER + INNER WHITE CARD) ── */}
+        <div className="pt-0.5">
           <div
-            className="bg-[#053D24] rounded-3xl p-4 sm:p-5 text-white shadow-xl space-y-3.5"
+            className="bg-[#053D24] rounded-3xl p-3.5 sm:p-5 text-white shadow-xl space-y-3"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onMouseEnter={() => setIsPaused(true)}
@@ -271,7 +281,7 @@ export function AboveTheFold() {
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>LIVE ON EBS</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-white font-black text-sm tracking-wide mt-0.5">
+                <div className="flex items-center gap-1.5 text-white font-black text-xs sm:text-sm tracking-wide mt-0.5">
                   <span className="text-amber-400">🔥</span>
                   <span>HOT DEALS IN ENUGU</span>
                 </div>
@@ -296,22 +306,21 @@ export function AboveTheFold() {
               </div>
             </div>
 
-            {/* Inner Featured White Card with Smooth Fade/Slide */}
+            {/* Inner Featured White Card — ONLY ONE DEAL RENDERED */}
             <div
-              className={`bg-white rounded-2xl p-3 sm:p-4 text-slate-900 shadow-md transition-all duration-250 ease-out ${
-                slideVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+              key={deal.id}
+              className={`bg-white rounded-2xl p-3 sm:p-4 text-slate-900 shadow-md transition-all duration-200 ease-out ${
+                slideVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
               }`}
             >
-              <div className="grid grid-cols-[105px_1fr] sm:grid-cols-[135px_1fr] gap-3 items-center">
+              <div className="grid grid-cols-[90px_1fr] xs:grid-cols-[105px_1fr] sm:grid-cols-[135px_1fr] gap-2.5 sm:gap-3.5 items-center">
                 {/* Product Image on Left */}
-                <div
-                  className="relative aspect-square w-full rounded-xl overflow-hidden flex items-center justify-center bg-slate-50 border border-slate-100"
-                >
+                <div className="relative aspect-square w-full rounded-xl overflow-hidden flex items-center justify-center bg-slate-50 border border-slate-100 shrink-0">
                   <Image
                     src={deal.imageUrl}
                     alt={deal.name}
                     fill
-                    className="object-contain p-2"
+                    className="object-contain p-1.5"
                     sizes="135px"
                     priority={currentSlide === 0}
                   />
@@ -324,12 +333,12 @@ export function AboveTheFold() {
                     <h3 className="text-xs sm:text-sm font-black text-slate-900 truncate leading-tight">
                       {deal.name}
                     </h3>
-                    <span className="bg-red-50 text-red-600 font-bold text-[10px] px-1.5 py-0.5 rounded shrink-0">
+                    <span className="bg-red-50 text-red-600 font-bold text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded shrink-0">
                       -{deal.discount}%
                     </span>
                   </div>
 
-                  <p className="text-[10px] text-slate-500 truncate">{deal.spec}</p>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate">{deal.spec}</p>
 
                   {/* Pricing */}
                   <div className="flex items-baseline gap-1.5 flex-wrap">
@@ -350,7 +359,7 @@ export function AboveTheFold() {
                   </div>
 
                   {/* Location & Rating */}
-                  <div className="flex items-center gap-2 text-[10px] text-slate-500 pt-0.5">
+                  <div className="flex items-center gap-2 text-[9px] sm:text-[10px] text-slate-500 pt-0.5">
                     <span className="flex items-center gap-0.5 truncate">
                       <MapPin className="w-2.5 h-2.5 text-slate-400 shrink-0" />
                       <span className="truncate">{deal.location}</span>
@@ -362,10 +371,10 @@ export function AboveTheFold() {
                   </div>
 
                   {/* View Deal Button */}
-                  <div className="pt-1.5">
+                  <div className="pt-1">
                     <Link
                       href={`/products/${deal.id}`}
-                      className="block w-full bg-[#053D24] hover:bg-[#087443] text-white text-[11px] font-bold py-2 rounded-lg text-center transition-colors shadow-2xs"
+                      className="block w-full bg-[#053D24] hover:bg-[#087443] active:scale-[.98] text-white text-[11px] sm:text-xs font-bold py-2 rounded-lg text-center transition-all shadow-2xs"
                     >
                       View Deal &rarr;
                     </Link>
@@ -393,12 +402,12 @@ export function AboveTheFold() {
             {/* Bottom Bar: Live Viewers + View All */}
             <div className="flex items-center justify-between text-xs text-white/80 pt-1 border-t border-white/10">
               <div className="flex items-center gap-1.5 text-[11px]">
-                <Users className="w-3.5 h-3.5 text-emerald-400" />
-                <span>12 people viewing deals</span>
+                <Users className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="truncate">12 people viewing deals</span>
               </div>
               <Link
                 href="/browse?filter=deals"
-                className="text-[11px] font-bold text-white hover:text-emerald-300 flex items-center gap-1 transition-colors"
+                className="text-[11px] font-bold text-white hover:text-emerald-300 flex items-center gap-1 transition-colors shrink-0"
               >
                 <span>View all deals</span>
                 <ArrowRight className="w-3 h-3" />
@@ -408,29 +417,29 @@ export function AboveTheFold() {
         </div>
 
         {/* ── 4. TRUST FEATURES SECTION (COMES LAST AFTER HOT DEALS) ── */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-3.5 shadow-sm grid grid-cols-3 divide-x divide-slate-100 text-center">
+        <div className="bg-white border border-slate-100 rounded-2xl p-3 sm:p-3.5 shadow-sm grid grid-cols-3 divide-x divide-slate-100 text-center">
           <div className="px-1 flex flex-col items-center">
-            <div className="w-8 h-8 rounded-full bg-[#E8F8EF] text-[#087443] flex items-center justify-center mb-1">
-              <ShieldCheck className="w-4 h-4" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#E8F8EF] text-[#087443] flex items-center justify-center mb-1">
+              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
-            <p className="text-[11px] font-black text-slate-900 leading-tight">Verified Deals</p>
-            <p className="text-[9px] text-slate-500 mt-0.5">Safe &amp; secure</p>
+            <p className="text-[10px] sm:text-[11px] font-black text-slate-900 leading-tight">Verified Deals</p>
+            <p className="text-[8.5px] sm:text-[9px] text-slate-500 mt-0.5">Safe &amp; secure</p>
           </div>
 
           <div className="px-1 flex flex-col items-center">
-            <div className="w-8 h-8 rounded-full bg-[#E8F8EF] text-[#087443] flex items-center justify-center mb-1">
-              <Users className="w-4 h-4" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#E8F8EF] text-[#087443] flex items-center justify-center mb-1">
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
-            <p className="text-[11px] font-black text-slate-900 leading-tight">Local Sellers</p>
-            <p className="text-[9px] text-slate-500 mt-0.5">From your community</p>
+            <p className="text-[10px] sm:text-[11px] font-black text-slate-900 leading-tight">Local Sellers</p>
+            <p className="text-[8.5px] sm:text-[9px] text-slate-500 mt-0.5">Community verified</p>
           </div>
 
           <div className="px-1 flex flex-col items-center">
-            <div className="w-8 h-8 rounded-full bg-[#E8F8EF] text-[#087443] flex items-center justify-center mb-1">
-              <Tag className="w-4 h-4" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#E8F8EF] text-[#087443] flex items-center justify-center mb-1">
+              <Tag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
-            <p className="text-[11px] font-black text-slate-900 leading-tight">Quality Listings</p>
-            <p className="text-[9px] text-slate-500 mt-0.5">Top products &amp; services</p>
+            <p className="text-[10px] sm:text-[11px] font-black text-slate-900 leading-tight">Quality Listings</p>
+            <p className="text-[8.5px] sm:text-[9px] text-slate-500 mt-0.5">Top products</p>
           </div>
         </div>
 
@@ -552,8 +561,9 @@ export function AboveTheFold() {
 
                 {/* Featured Deal Card */}
                 <div
-                  className={`transition-all duration-300 ease-out ${
-                    slideVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+                  key={deal.id}
+                  className={`transition-all duration-200 ease-out ${
+                    slideVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
                   }`}
                 >
                   <div className="flex">
@@ -562,9 +572,6 @@ export function AboveTheFold() {
                       className="relative w-[45%] shrink-0 overflow-hidden bg-slate-900"
                       style={{ minHeight: '280px' }}
                     >
-                      <div className="absolute top-3 left-3 z-10">
-                        <DiscountBadge percent={deal.discount} />
-                      </div>
                       <button
                         onClick={() => setIsWishlisted((prev) => ({ ...prev, [deal.id]: !prev[deal.id] }))}
                         className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
@@ -585,7 +592,12 @@ export function AboveTheFold() {
                     {/* Info Area */}
                     <div className="flex-1 flex flex-col justify-between gap-4 p-5 text-white">
                       <div>
-                        <h3 className="text-xl font-black text-white leading-tight">{deal.name}</h3>
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="text-xl font-black text-white leading-tight">{deal.name}</h3>
+                          <span className="bg-red-500/20 border border-red-500/40 text-red-300 font-black text-xs px-2 py-0.5 rounded-md">
+                            -{deal.discount}%
+                          </span>
+                        </div>
                         <p className="text-xs text-emerald-300/80 mt-1">{deal.spec}</p>
                       </div>
 

@@ -26,7 +26,7 @@ const PILLARS = [
 
 export function TrustStrip() {
   return (
-    <section className="w-full bg-white py-6 border-b border-[#E5EDE9]">
+    <section className="w-full max-w-full bg-white py-6 border-b border-[#E5EDE9] overflow-hidden">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {PILLARS.map((p) => (
@@ -45,3 +45,5 @@ export function TrustStrip() {
     </section>
   );
 }
+
+export default TrustStrip;

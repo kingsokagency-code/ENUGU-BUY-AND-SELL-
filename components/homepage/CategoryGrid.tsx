@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 const CATEGORIES = [
-  { name: 'Phones & Accessories', count: '1,250+ items', slug: 'phones-tablets', icon: <Smartphone className="w-5 h-5" />, color: 'text-emerald-700 bg-emerald-50' },
+  { name: 'Phones & Tablets', count: '1,250+ items', slug: 'phones-tablets', icon: <Smartphone className="w-5 h-5" />, color: 'text-emerald-700 bg-emerald-50' },
   { name: 'Laptops & Computers',  count: '850+ items',   slug: 'electronics',   icon: <Laptop     className="w-5 h-5" />, color: 'text-emerald-700 bg-emerald-50' },
   { name: 'Fashion & Wearables',  count: '2,100+ items', slug: 'fashion',       icon: <Shirt      className="w-5 h-5" />, color: 'text-emerald-700 bg-emerald-50' },
   { name: 'Books & Learning',     count: '950+ items',   slug: 'books',         icon: <BookOpen   className="w-5 h-5" />, color: 'text-emerald-700 bg-emerald-50' },
@@ -22,10 +22,10 @@ const CATEGORIES = [
 
 export function CategoryGrid() {
   return (
-    <section className="w-full bg-[#F8FAF9] py-8 border-b border-[#E5EDE9]">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
+    <section className="w-full bg-[#F8FAF9] py-6 sm:py-8 border-b border-[#E5EDE9] overflow-hidden">
+      <div className="max-w-[1440px] mx-auto px-3.5 sm:px-8 lg:px-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
           <h2 className="text-sm sm:text-base font-bold text-[#0D1F17]">Shop by Category</h2>
           <Link
             href="/browse"
@@ -36,21 +36,21 @@ export function CategoryGrid() {
           </Link>
         </div>
 
-        {/* 9 Category Cards Row */}
+        {/* 9 Category Cards Row — clean horizontal scroll on mobile, grid on desktop */}
         <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none [scrollbar-width:none] sm:grid sm:grid-cols-5 lg:grid-cols-9 sm:overflow-visible">
           {CATEGORIES.map((cat) => (
             <Link
               key={cat.name}
               href={cat.slug === 'all' ? '/browse' : `/browse?category=${cat.slug}`}
-              className="flex flex-col items-center text-center p-3 rounded-2xl bg-white border border-[#E5EDE9] hover:border-[#087443]/50 hover:shadow-sm transition-all min-w-[105px] sm:min-w-0 group cursor-pointer"
+              className="flex flex-col items-center text-center p-3 rounded-2xl bg-white border border-[#E5EDE9] hover:border-[#087443]/50 hover:shadow-sm transition-all min-w-[95px] w-[95px] sm:w-auto sm:min-w-0 shrink-0 group cursor-pointer shadow-2xs"
             >
-              <div className={`w-10 h-10 rounded-xl ${cat.color} flex items-center justify-center mb-2 group-hover:scale-108 transition-transform`}>
+              <div className={`w-10 h-10 rounded-xl ${cat.color} flex items-center justify-center mb-1.5 group-hover:scale-105 transition-transform shrink-0`}>
                 {cat.icon}
               </div>
               <p className="text-[11px] font-bold text-[#0D1F17] leading-tight line-clamp-2 group-hover:text-[#087443] transition-colors">
                 {cat.name}
               </p>
-              <p className="text-[9px] text-[#9CB3AA] mt-1">
+              <p className="text-[9px] text-[#9CB3AA] mt-0.5">
                 {cat.count}
               </p>
             </Link>
@@ -60,3 +60,5 @@ export function CategoryGrid() {
     </section>
   );
 }
+
+export default CategoryGrid;
