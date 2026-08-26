@@ -93,3 +93,6 @@ export interface Report {
   status: ReportStatus;
   created_at: string;
 }
+
+// Phase 3 Commerce & Operations Types Re-export
+export * from './commerce';
