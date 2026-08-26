@@ -61,7 +61,7 @@ export function Navbar() {
           {/* LEFT: Official Brand Logo on White */}
           <div className="flex items-center shrink-0">
             <Link href="/" className="inline-flex items-center" aria-label="Enugu Buy & Sell Home">
-              <Logo size="md" width={180} height={54} />
+              <Logo size="md" width={215} height={64.5} />
             </Link>
           </div>
 
@@ -183,7 +183,7 @@ export function Navbar() {
           {/* CENTER: Exact Proportional Master Logo (Zero Distortion) */}
           <div className="flex items-center justify-center shrink-0">
             <Link href="/" className="inline-flex items-center" aria-label="Enugu Buy & Sell Home">
-              <Logo size="sm" width={115} height={46} />
+              <Logo size="sm" width={135} height={40.5} />
             </Link>
           </div>
 
