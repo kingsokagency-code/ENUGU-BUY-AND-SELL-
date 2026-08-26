@@ -54,7 +54,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             style={{ filter: 'drop-shadow(0 12px 28px rgba(22,163,74,0.18)) drop-shadow(0 3px 8px rgba(0,0,0,0.06))' }}
           >
             <Image
-              src="/logo.jpg"
+              src="/logo.svg"
               alt="Enugu Buy & Sell"
               fill
               className="object-contain"

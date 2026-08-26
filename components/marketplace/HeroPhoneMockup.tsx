@@ -60,7 +60,7 @@ export function HeroPhoneMockup() {
             <div className="flex items-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/logo-official.png"
+                src="/logo.svg"
                 alt="Enugu Buy & Sell"
                 className="h-7.5 w-auto object-contain"
               />
