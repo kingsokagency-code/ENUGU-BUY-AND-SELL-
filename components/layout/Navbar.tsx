@@ -13,6 +13,8 @@ import {
   ShoppingBag,
   Menu,
   ChevronDown,
+  Bell,
+  Store,
 } from 'lucide-react';
 
 export function Navbar() {
@@ -54,9 +56,8 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-2xs select-none">
         
-        {/* ── TOP BAR: Logo, Search, Actions ── */}
-        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-3.5 flex items-center justify-between gap-4 lg:gap-8">
-          
+        {/* ── 1. DESKTOP & TABLET TOP BAR (md and up) ── */}
+        <div className="hidden md:flex w-full max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-3.5 items-center justify-between gap-4 lg:gap-8">
           {/* LEFT: Official Brand Logo on White */}
           <div className="flex items-center shrink-0">
             <Link href="/" className="inline-flex items-center" aria-label="Enugu Buy & Sell Home">
@@ -67,7 +68,7 @@ export function Navbar() {
           {/* CENTER: Large Marketplace Search Bar with Dropdown */}
           <form
             onSubmit={handleSearch}
-            className="hidden md:flex flex-1 max-w-2xl items-center rounded-full border border-slate-200 bg-slate-50/70 hover:border-slate-300 focus-within:border-[#087443] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#087443]/10 transition-all p-1"
+            className="flex flex-1 max-w-2xl items-center rounded-full border border-slate-200 bg-slate-50/70 hover:border-slate-300 focus-within:border-[#087443] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#087443]/10 transition-all p-1"
           >
             {/* Category Dropdown */}
             <div className="relative">
@@ -125,7 +126,6 @@ export function Navbar() {
 
           {/* RIGHT: Wishlist, Cart (2), Account, and Sell on EBS */}
           <div className="flex items-center gap-4 sm:gap-6 shrink-0">
-            
             {/* Wishlist */}
             <Link
               href="/browse"
@@ -166,20 +166,72 @@ export function Navbar() {
               <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
               <span>Sell on EBS</span>
             </Link>
-
-            {/* Mobile Hamburger Menu */}
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 hover:text-[#087443] transition-colors"
-              aria-label="Open Mobile Menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-
           </div>
         </div>
 
-        {/* ── SUB-NAVIGATION ROW: Home (Active), Categories, Hot Deals [HOT], Stores, Recently Listed, About EBS ── */}
+        {/* ── 2. MOBILE TOP BAR (< md) ── */}
+        <div className="md:hidden px-4 pt-3 pb-2 flex items-center justify-between gap-2">
+          {/* LEFT: Hamburger Menu */}
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700 hover:text-[#087443] transition-colors shrink-0"
+            aria-label="Open Mobile Menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          {/* CENTER: Official Brand Logo */}
+          <Link href="/" className="inline-flex items-center" aria-label="Enugu Buy & Sell Home">
+            <Logo size="sm" />
+          </Link>
+
+          {/* RIGHT: Notification Bell + Sell on EBS */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/conversations"
+              className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700 hover:text-[#087443] transition-colors relative"
+              aria-label="Inbox & Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#087443] text-white rounded-full text-[9px] font-bold flex items-center justify-center">
+                2
+              </span>
+            </Link>
+
+            <Link
+              href="/create-shop"
+              className="inline-flex items-center gap-1.5 bg-[#087443] hover:bg-[#065F37] text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-2xs"
+            >
+              <Store className="w-3.5 h-3.5" />
+              <span>Sell on EBS</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* ── 3. MOBILE SEARCH BAR (< md) ── */}
+        <div className="md:hidden px-4 pb-3 pt-0.5">
+          <form
+            onSubmit={handleSearch}
+            className="flex items-center rounded-full border border-slate-200 bg-slate-50/90 pl-3.5 pr-1 py-1 focus-within:border-[#087443] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#087443]/10 transition-all shadow-2xs"
+          >
+            <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search in Enugu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none min-w-0"
+            />
+            <button
+              type="submit"
+              className="bg-[#053D24] hover:bg-[#087443] text-white rounded-full px-4 py-1.5 text-xs font-bold transition-colors shrink-0 shadow-2xs cursor-pointer"
+            >
+              Search
+            </button>
+          </form>
+        </div>
+
+        {/* ── 4. SUB-NAVIGATION ROW (md and up only) ── */}
         <nav className="hidden md:flex border-t border-slate-100 bg-white">
           <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 flex items-center gap-8 text-xs font-semibold text-slate-600">
             {navLinks.map((link) => {
@@ -206,26 +258,6 @@ export function Navbar() {
             })}
           </div>
         </nav>
-
-        {/* Mobile Search Bar */}
-        <div className="md:hidden px-4 pb-3 pt-1">
-          <form
-            onSubmit={handleSearch}
-            className="flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5"
-          >
-            <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
-            <input
-              type="text"
-              placeholder="Search in Enugu..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-transparent text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none"
-            />
-            <button type="submit" className="bg-[#087443] text-white rounded-full px-3 py-1 text-xs font-bold">
-              Search
-            </button>
-          </form>
-        </div>
 
       </header>
 
