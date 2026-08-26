@@ -183,7 +183,7 @@ export function Navbar() {
           {/* CENTER: Exact Proportional Master Logo (Zero Distortion) */}
           <div className="flex items-center justify-center shrink-0">
             <Link href="/" className="inline-flex items-center" aria-label="Enugu Buy & Sell Home">
-              <Logo size="sm" width={125} height={37.5} />
+              <Logo size="sm" width={115} height={46} />
             </Link>
           </div>
 
