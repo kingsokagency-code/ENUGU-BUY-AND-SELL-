@@ -20,6 +20,8 @@ import {
   ArrowLeft,
   Mail,
   Lock,
+  Eye,
+  EyeOff,
   User,
   ShieldCheck,
   CheckCircle2,
@@ -48,6 +50,7 @@ function AuthContent() {
   // Form Fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [location, setLocation] = useState('UNEC Campus, Enugu');
   const [phone, setPhone] = useState('');
@@ -175,7 +178,12 @@ function AuthContent() {
     setLoading(true);
 
     try {
-      const res = await signUpWithEmail({ email, password, fullName });
+      const res = await signUpWithEmail({
+        email,
+        password,
+        fullName,
+        phone: phone.trim() ? phone.trim() : undefined,
+      });
       if (res.error) {
         const errMsg = typeof res.error.message === 'string' ? res.error.message : 'Unable to create account. Please check your details.';
         setError(errMsg);
@@ -457,13 +465,21 @@ function AuthContent() {
                   <div className="relative flex items-center">
                     <Lock className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
                     <input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       required
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl pl-10 pr-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-[#087443]/15 transition-all font-medium placeholder:text-slate-400"
+                      className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl pl-10 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-[#087443]/15 transition-all font-medium placeholder:text-slate-400"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 
@@ -516,19 +532,43 @@ function AuthContent() {
 
                 <div>
                   <label className="block text-xs font-bold text-[#111111] mb-1">
+                    Phone / WhatsApp Number <span className="text-slate-400 font-normal">(Optional)</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <Phone className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <input
+                      type="tel"
+                      placeholder="e.g. 08012345678"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl pl-10 pr-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-[#087443]/15 transition-all font-medium placeholder:text-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#111111] mb-1">
                     Create Password
                   </label>
                   <div className="relative flex items-center">
                     <Lock className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
                     <input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       required
                       minLength={6}
                       placeholder="At least 6 characters"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl pl-10 pr-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-[#087443]/15 transition-all font-medium placeholder:text-slate-400"
+                      className="w-full bg-[#FAFAF8] border border-slate-300 focus:border-[#087443] text-sm text-[#111111] rounded-xl pl-10 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-[#087443]/15 transition-all font-medium placeholder:text-slate-400"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 

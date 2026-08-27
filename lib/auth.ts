@@ -51,12 +51,14 @@ export async function signUpWithEmail(input: {
   email: string;
   password: string;
   fullName: string;
+  phone?: string;
 }) {
   try {
     const validated = emailSignupSchema.parse({
       email: input.email,
       password: input.password,
       full_name: input.fullName,
+      phone: input.phone,
     });
 
     const { data, error } = await supabase.auth.signUp({
@@ -65,6 +67,7 @@ export async function signUpWithEmail(input: {
       options: {
         data: {
           full_name: validated.full_name,
+          phone: validated.phone || null,
         },
       },
     });
@@ -82,6 +85,20 @@ export async function signUpWithEmail(input: {
           message: 'An account with this email address already exists. Please sign in instead.',
         },
       };
+    }
+
+    // If phone was provided and user was created, save phone to profile
+    if (data.user && validated.phone) {
+      try {
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            full_name: validated.full_name,
+            phone: validated.phone,
+            location: 'Enugu',
+          });
+      } catch {}
     }
 
     const needsEmailVerification = !data.session && !!data.user;
@@ -166,7 +183,10 @@ export async function signInWithGoogle(redirectTo?: string) {
     });
 
     if (error) {
-      return { error: { message: error.message } };
+      const errMsg = error.message.toLowerCase().includes('unsupported provider') || error.message.toLowerCase().includes('provider is not enabled')
+        ? 'Google sign-in is not enabled on this marketplace yet. Please sign in with your email and password below.'
+        : error.message;
+      return { error: { message: errMsg } };
     }
     return { data, error: null };
   } catch (err: unknown) {
