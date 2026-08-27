@@ -70,7 +70,18 @@ export async function signUpWithEmail(input: {
     });
 
     if (error) {
-      return { data: null, error: { message: error.message } };
+      const errMsg = error.message || (error as any).error_description || 'Unable to create account. Please try again.';
+      return { data: null, error: { message: errMsg } };
+    }
+
+    // Supabase anti-enumeration check: if email is already registered, identities array is empty
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return {
+        data: null,
+        error: {
+          message: 'An account with this email address already exists. Please sign in instead.',
+        },
+      };
     }
 
     const needsEmailVerification = !data.session && !!data.user;
@@ -239,8 +250,10 @@ export async function updateUserProfile(
 
     const { data, error } = await supabase
       .from('profiles')
-      .update(updatePayload)
-      .eq('id', userId)
+      .upsert({
+        id: userId,
+        ...updatePayload,
+      })
       .select()
       .single();
 

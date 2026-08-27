@@ -132,7 +132,8 @@ function AuthContent() {
         if (res.error.isUnverified) {
           setMode('verify-notice');
         } else {
-          setError(res.error.message);
+          const msg = typeof res.error.message === 'string' ? res.error.message : 'Invalid email or password.';
+          setError(msg);
         }
       } else if (res.data?.user) {
         setAuthenticatedUserId(res.data.user.id);
@@ -158,8 +159,9 @@ function AuthContent() {
           }
         }
       }
-    } catch {
-      setError('An unexpected error occurred. Please try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -175,15 +177,21 @@ function AuthContent() {
     try {
       const res = await signUpWithEmail({ email, password, fullName });
       if (res.error) {
-        setError(res.error.message);
+        const errMsg = typeof res.error.message === 'string' ? res.error.message : 'Unable to create account. Please check your details.';
+        setError(errMsg);
       } else if (res.data?.needsEmailVerification) {
         setMode('verify-notice');
       } else if (res.data?.user) {
         setAuthenticatedUserId(res.data.user.id);
-        setMode('profile-complete');
+        if (res.data.session) {
+          setMode('profile-complete');
+        } else {
+          setMode('verify-notice');
+        }
       }
-    } catch {
-      setError('Sign up failed. Please check your network and try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Sign up failed. Please check your network and try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
