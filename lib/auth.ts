@@ -87,20 +87,6 @@ export async function signUpWithEmail(input: {
       };
     }
 
-    // If phone was provided and user was created, save phone to profile
-    if (data.user && validated.phone) {
-      try {
-        await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            full_name: validated.full_name,
-            phone: validated.phone,
-            location: 'Enugu',
-          });
-      } catch {}
-    }
-
     const needsEmailVerification = !data.session && !!data.user;
 
     return {
@@ -270,10 +256,8 @@ export async function updateUserProfile(
 
     const { data, error } = await supabase
       .from('profiles')
-      .upsert({
-        id: userId,
-        ...updatePayload,
-      })
+      .update(updatePayload)
+      .eq('id', userId)
       .select()
       .single();
 
