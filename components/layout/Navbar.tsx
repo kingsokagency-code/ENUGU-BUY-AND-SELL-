@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '@/components/brand/Logo';
@@ -16,6 +16,8 @@ import {
   Bell,
   Store,
 } from 'lucide-react';
+import { getCart } from '@/lib/commerce-client';
+import { getCurrentUser } from '@/lib/auth';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -24,6 +26,27 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  const fetchCartCount = useCallback(async () => {
+    const { user } = await getCurrentUser();
+    if (!user) {
+      setCartCount(0);
+      return;
+    }
+    const res = await getCart();
+    if (res.success) {
+      setCartCount(res.count);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCartCount();
+
+    const handleCartUpdate = () => fetchCartCount();
+    window.addEventListener('cart_updated', handleCartUpdate);
+    return () => window.removeEventListener('cart_updated', handleCartUpdate);
+  }, [fetchCartCount]);
 
   const categories = [
     'All Categories',
@@ -58,32 +81,33 @@ export function Navbar() {
         
         {/* ── 1. DESKTOP & TABLET TOP BAR (md and up) ── */}
         <div className="hidden md:flex w-full max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-3.5 items-center justify-between gap-4 lg:gap-8">
-          {/* LEFT: Official Brand Logo on White */}
-          <div className="flex items-center shrink-0">
+          
+          {/* LEFT: Official Master Brand Logo */}
+          <div className="shrink-0 flex items-center">
             <Link href="/" className="inline-flex items-center" aria-label="Enugu Buy & Sell Home">
               <Logo size="md" width={135} height={71} />
             </Link>
           </div>
 
-          {/* CENTER: Large Marketplace Search Bar with Dropdown */}
+          {/* CENTER: Search Bar with Integrated Category Selector */}
           <form
             onSubmit={handleSearch}
-            className="flex flex-1 max-w-2xl items-center rounded-full border border-slate-200 bg-slate-50/70 hover:border-slate-300 focus-within:border-[#087443] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#087443]/10 transition-all p-1"
+            className="flex-1 max-w-2xl flex items-center rounded-full border-2 border-[#087443] bg-white p-1 pl-4 shadow-xs focus-within:shadow-md transition-shadow relative"
           >
-            {/* Category Dropdown */}
-            <div className="relative">
+            {/* Category Dropdown Toggle */}
+            <div className="relative shrink-0 border-r border-slate-200 pr-3 mr-1">
               <button
                 type="button"
                 onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
-                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-[#087443] border-r border-slate-200 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-[#087443] transition-colors py-1 cursor-pointer"
               >
                 <span>{selectedCategory}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${categoryDropdownOpen ? 'rotate-180 text-[#087443]' : ''}`} />
               </button>
 
-              {/* Dropdown Menu */}
+              {/* Category Dropdown Menu */}
               {categoryDropdownOpen && (
-                <div className="absolute left-0 top-full mt-2 w-48 rounded-xl bg-white p-1.5 shadow-xl border border-slate-100 z-50">
+                <div className="absolute top-full left-0 mt-3 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
                   {categories.map((cat) => (
                     <button
                       key={cat}
@@ -92,10 +116,8 @@ export function Navbar() {
                         setSelectedCategory(cat);
                         setCategoryDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                        selectedCategory === cat
-                          ? 'bg-[#E8F5EF] text-[#087443] font-bold'
-                          : 'text-slate-700 hover:bg-slate-50'
+                      className={`w-full text-left px-4 py-2 text-xs transition-colors hover:bg-[#E8F8EF] hover:text-[#087443] ${
+                        selectedCategory === cat ? 'font-bold text-[#087443] bg-[#E8F8EF]/50' : 'text-slate-600'
                       }`}
                     >
                       {cat}
@@ -124,7 +146,7 @@ export function Navbar() {
             </button>
           </form>
 
-          {/* RIGHT: Wishlist, Cart (2), Account, and Sell on EBS */}
+          {/* RIGHT: Wishlist, Cart, Account, and Sell on EBS */}
           <div className="flex items-center gap-4 sm:gap-6 shrink-0">
             {/* Wishlist */}
             <Link
@@ -135,16 +157,18 @@ export function Navbar() {
               <span className="text-[11px] font-medium tracking-tight">Wishlist</span>
             </Link>
 
-            {/* Cart with Dynamic Badge (2) */}
+            {/* Live Cart with Dynamic Badge */}
             <Link
-              href="/conversations"
+              href="/cart"
               className="hidden sm:flex flex-col items-center gap-0.5 text-slate-600 hover:text-[#087443] transition-colors relative"
             >
               <div className="relative">
                 <ShoppingCart className="w-5 h-5 stroke-[1.8]" />
-                <span className="absolute -top-1.5 -right-2 w-4 h-4 bg-[#087443] text-white rounded-full text-[10px] font-bold flex items-center justify-center">
-                  2
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 bg-[#087443] text-white rounded-full text-[10px] font-bold flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
               </div>
               <span className="text-[11px] font-medium tracking-tight">Cart</span>
             </Link>
@@ -169,7 +193,7 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* ── 2. MOBILE TOP BAR (< md) — Static, Non-Distorted, Zero Overflow ── */}
+        {/* ── 2. MOBILE TOP BAR (< md) ── */}
         <div className="md:hidden px-3 sm:px-4 pt-2.5 pb-2 flex items-center justify-between gap-1.5 sm:gap-2 w-full max-w-full">
           {/* LEFT: Hamburger Menu Button */}
           <button
@@ -180,24 +204,26 @@ export function Navbar() {
             <Menu className="w-4 h-4" />
           </button>
 
-          {/* CENTER: Exact Proportional Master Logo (Official Artwork) */}
+          {/* CENTER: Exact Proportional Master Logo */}
           <div className="flex items-center justify-center shrink-0">
             <Link href="/" className="inline-flex items-center" aria-label="Enugu Buy & Sell Home">
               <Logo size="sm" width={95} height={50} />
             </Link>
           </div>
 
-          {/* RIGHT: Notification Bell + Sell on EBS Button */}
+          {/* RIGHT: Cart + Sell on EBS Button */}
           <div className="flex items-center gap-1.5 shrink-0">
             <Link
-              href="/conversations"
+              href="/cart"
               className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700 hover:text-[#087443] transition-colors relative shrink-0"
-              aria-label="Inbox & Notifications"
+              aria-label="Shopping Cart"
             >
-              <Bell className="w-3.5 h-3.5" />
-              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-[#087443] text-white rounded-full text-[8px] font-bold flex items-center justify-center">
-                2
-              </span>
+              <ShoppingCart className="w-3.5 h-3.5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-3.5 h-3.5 px-0.5 bg-[#087443] text-white rounded-full text-[8px] font-bold flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
             </Link>
 
             <Link

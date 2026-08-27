@@ -19,7 +19,7 @@ function makeClient(key: string | undefined): SupabaseClient | null {
 }
 
 /** Service-role client — full access, bypasses RLS */
-function serviceClient(): SupabaseClient | null {
+export function serviceClient(): SupabaseClient | null {
   return makeClient(process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 

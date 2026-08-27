@@ -1,18 +1,21 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getAuthenticatedUser } from '@/lib/server-auth';
+import { supabase, serviceClient } from '@/lib/supabase';
 
 /**
  * GET /api/conversations
  * List all conversations where authenticated user is buyer or seller
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    const { user, error: authErr } = await getAuthenticatedUser(request);
     if (authErr || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json({ error: 'Authentication required to access conversations' }, { status: 401 });
     }
 
-    const { data: conversations, error } = await supabase
+    const admin = serviceClient() || supabase;
+
+    const { data: conversations, error } = await admin
       .from('conversations')
       .select(`
         id,
@@ -53,7 +56,6 @@ export async function GET() {
     // Format conversations with latest message
     const formatted = (conversations ?? []).map((conv) => {
       const msgs = Array.isArray(conv.messages) ? conv.messages : [];
-      // Sort messages by created_at descending to get the latest
       const sortedMsgs = [...msgs].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -86,8 +88,7 @@ export async function GET() {
  */
 export async function POST(request: Request) {
   try {
-    // 1. Authenticate buyer session
-    const { data: { user: buyer }, error: authErr } = await supabase.auth.getUser();
+    const { user: buyer, error: authErr } = await getAuthenticatedUser(request);
     if (authErr || !buyer) {
       return NextResponse.json({ error: 'Authentication required to message seller' }, { status: 401 });
     }
@@ -99,8 +100,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'product_id is required' }, { status: 400 });
     }
 
-    // 2. Fetch product and seller_id (shop.owner_id)
-    const { data: product, error: prodErr } = await supabase
+    const admin = serviceClient() || supabase;
+
+    // 1. Fetch product and seller_id (shop.owner_id)
+    const { data: product, error: prodErr } = await admin
       .from('products')
       .select('id, name, shop_id, shops!inner(owner_id, name)')
       .eq('id', product_id)
@@ -114,15 +117,15 @@ export async function POST(request: Request) {
     const seller_id = shopData?.owner_id;
 
     if (!seller_id) {
-      return NextResponse.json({ error: 'Product owner not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Product merchant owner not found' }, { status: 404 });
     }
 
     if (buyer.id === seller_id) {
       return NextResponse.json({ error: 'You cannot initiate a conversation with your own shop' }, { status: 400 });
     }
 
-    // 3. Check for existing conversation or insert new
-    const { data: existing } = await supabase
+    // 2. Check for existing conversation
+    const { data: existing } = await admin
       .from('conversations')
       .select('*')
       .eq('buyer_id', buyer.id)
@@ -134,8 +137,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, conversation: existing, isExisting: true });
     }
 
-    // 4. Insert new conversation (Triggers verify_conversation_seller execution)
-    const { data: conversation, error: dbErr } = await supabase
+    // 3. Insert new conversation (Fires verify_conversation_seller trigger)
+    const { data: conversation, error: dbErr } = await admin
       .from('conversations')
       .insert({
         buyer_id: buyer.id,
@@ -151,17 +154,16 @@ export async function POST(request: Request) {
 
     // Log telemetry event
     try {
-      await supabase.from('analytics_events').insert({
+      await admin.from('analytics_events').insert({
         event_name: 'conversation_started',
         event_data: { product_id, seller_id, buyer_id: buyer.id },
         user_id: buyer.id,
       });
     } catch {}
 
-    return NextResponse.json({ success: true, conversation }, { status: 201 });
+    return NextResponse.json({ success: true, conversation, isExisting: false }, { status: 201 });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Server error';
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
-

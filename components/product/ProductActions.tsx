@@ -2,11 +2,15 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Star, ShieldCheck, ShoppingCart, MessageCircle,
-  Heart, Share2, Plus, Minus, Check, Lock, Shield, Award,
+  Heart, Share2, Plus, Minus, Check, Lock, Shield, Award, AlertCircle,
 } from 'lucide-react';
 import { DiscountBadge } from '@/components/ebs-ui/Badge';
+import { addToCart } from '@/lib/commerce-client';
+import { initiateProductConversation } from '@/lib/messaging-client';
+import { getCurrentUser } from '@/lib/auth';
 
 interface ProductActionsProps {
   productId: string;
@@ -19,34 +23,105 @@ interface ProductActionsProps {
   storeRating?: number;
   storeReviews?: number;
   isVerified?: boolean;
-  onAddToCart?: (qty: number) => void;
-  onBuyNow?: (qty: number) => void;
 }
 
 export function ProductActions({
   productId,
   name,
   price,
-  originalPrice = 1050000,
+  originalPrice,
   inStock = true,
-  storeName = 'Kingsok Gadgets',
-  storeSlug = 'kingsok-gadgets',
+  storeName = 'Campus Verified Merchant',
+  storeSlug = 'store',
   storeRating = 4.8,
-  storeReviews = 256,
+  storeReviews = 42,
   isVerified = true,
 }: ProductActionsProps) {
+  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [initiatingChat, setInitiatingChat] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const discountPercent = originalPrice > price
+  const handleChatWithSeller = async () => {
+    try {
+      setInitiatingChat(true);
+      setErrorMessage(null);
+      const { user } = await getCurrentUser();
+      if (!user) {
+        router.push(`/auth?redirect=${encodeURIComponent(`/products/${productId}`)}`);
+        return;
+      }
+
+      const res = await initiateProductConversation(productId);
+      if (!res.success || !res.conversation?.id) {
+        setErrorMessage(res.error || 'Failed to start chat with seller');
+        return;
+      }
+
+      router.push(`/conversations/${res.conversation.id}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Chat connection error';
+      setErrorMessage(msg);
+    } finally {
+      setInitiatingChat(false);
+    }
+  };
+
+  const discountPercent = originalPrice && originalPrice > price
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0;
 
-  const handleAddToCart = () => {
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
+  const handleAddToCart = async () => {
+    setErrorMessage(null);
+    setAddingToCart(true);
+
+    const { user } = await getCurrentUser();
+    if (!user) {
+      router.push(`/auth?redirect=${encodeURIComponent(window.location.pathname)}`);
+      setAddingToCart(false);
+      return;
+    }
+
+    const res = await addToCart(productId, quantity);
+    setAddingToCart(false);
+
+    if (res.success) {
+      setAddedToCart(true);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('cart_updated'));
+      }
+      setTimeout(() => setAddedToCart(false), 2500);
+    } else {
+      setErrorMessage(res.error || 'Could not add to cart');
+    }
+  };
+
+  const handleBuyNow = async () => {
+    setErrorMessage(null);
+    setAddingToCart(true);
+
+    const { user } = await getCurrentUser();
+    if (!user) {
+      router.push(`/auth?redirect=${encodeURIComponent(window.location.pathname)}`);
+      setAddingToCart(false);
+      return;
+    }
+
+    const res = await addToCart(productId, quantity);
+    setAddingToCart(false);
+
+    if (res.success) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('cart_updated'));
+      }
+      router.push('/checkout');
+    } else {
+      setErrorMessage(res.error || 'Could not initiate checkout');
+    }
   };
 
   const handleShare = async () => {
@@ -68,11 +143,11 @@ export function ProductActions({
         <div className="flex items-center gap-3 mt-2 text-xs flex-wrap">
           <div className="flex items-center gap-1 text-amber-500 font-bold">
             <Star className="w-3.5 h-3.5 fill-current" />
-            <span>4.9</span>
-            <span className="text-[#6B7C74] font-normal">(128 reviews)</span>
+            <span>{storeRating}</span>
+            <span className="text-[#6B7C74] font-normal">({storeReviews} reviews)</span>
           </div>
           <span className="text-[#9CB3AA]">•</span>
-          <span className="text-[#6B7C74]">162 sold on campus</span>
+          <span className="text-[#6B7C74]">Verified on campus</span>
           <span className="text-[#9CB3AA]">•</span>
           <span className={`font-bold ${inStock ? 'text-[#087443]' : 'text-red-500'}`}>
             {inStock ? '● In Stock' : '● Out of Stock'}
@@ -93,7 +168,7 @@ export function ProductActions({
               </span>
             )}
           </div>
-          <p className="text-[11px] text-[#6B7C74] mt-0.5">Price inclusive of campus escrow protection</p>
+          <p className="text-[11px] text-[#6B7C74] mt-0.5">Price protected by Enugu Escrow &amp; Return Guarantee</p>
         </div>
 
         {discountPercent > 0 && (
@@ -131,24 +206,28 @@ export function ProductActions({
 
       {/* Highlights Checklist */}
       <div className="bg-white border border-[#E5EDE9] rounded-2xl p-4 space-y-2 text-xs">
-        <p className="font-bold text-[#0D1F17] mb-2">Highlights & Guarantees</p>
+        <p className="font-bold text-[#0D1F17] mb-2">Highlights &amp; Guarantees</p>
         <div className="flex items-center gap-2 text-[#0D1F17]">
           <Check className="w-4 h-4 text-[#087443] shrink-0" />
-          <span>100% Original Certified Device</span>
+          <span>Verified Authentic Campus Listing</span>
         </div>
         <div className="flex items-center gap-2 text-[#0D1F17]">
           <Check className="w-4 h-4 text-[#087443] shrink-0" />
-          <span>1 Year Warranty & Official Support</span>
+          <span>Campus Escrow Safe Exchange Guarantee</span>
         </div>
         <div className="flex items-center gap-2 text-[#0D1F17]">
           <Check className="w-4 h-4 text-[#087443] shrink-0" />
-          <span>Fast Delivery within Enugu & UNN/IMT Campuses</span>
-        </div>
-        <div className="flex items-center gap-2 text-[#0D1F17]">
-          <Check className="w-4 h-4 text-[#087443] shrink-0" />
-          <span>7 Days Return Policy (Full Money Back)</span>
+          <span>Direct Meetup / Handover in Enugu</span>
         </div>
       </div>
+
+      {/* Error Alert if any */}
+      {errorMessage && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
 
       {/* Quantity Stepper & Main CTAs */}
       <div className="space-y-3 pt-2">
@@ -177,31 +256,37 @@ export function ProductActions({
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={handleAddToCart}
+            disabled={addingToCart}
             className={`flex-1 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer ${
               addedToCart
                 ? 'bg-[#053D24] text-white'
-                : 'bg-[#087443] hover:bg-[#065f35] text-white shadow-[#087443]/20'
+                : 'bg-[#087443] hover:bg-[#065f35] active:scale-[0.98] text-white shadow-[#087443]/20'
             }`}
           >
             <ShoppingCart className="w-4 h-4" />
-            <span>{addedToCart ? 'Added to Cart ✓' : 'Add to Cart'}</span>
+            <span>{addedToCart ? 'Added to Cart ✓' : addingToCart ? 'Adding...' : 'Add to Cart'}</span>
           </button>
 
-          <Link
-            href={`/conversations`}
-            className="flex-1 py-3.5 rounded-2xl font-bold text-sm bg-[#053D24] hover:bg-[#032817] text-white flex items-center justify-center gap-2 transition-all text-center"
+          <button
+            onClick={handleBuyNow}
+            disabled={addingToCart}
+            className="flex-1 py-3.5 rounded-2xl font-bold text-sm bg-[#053D24] hover:bg-[#032817] active:scale-[0.98] text-white flex items-center justify-center gap-2 transition-all text-center cursor-pointer shadow-md"
           >
-            <span>Buy Now</span>
-          </Link>
+            <span>Buy Now →</span>
+          </button>
         </div>
       </div>
 
       {/* Secondary Actions (Chat / Wishlist / Share) */}
       <div className="flex items-center justify-around py-3 border-y border-[#E5EDE9] text-xs text-[#6B7C74]">
-        <Link href={`/conversations`} className="flex items-center gap-1.5 hover:text-[#087443] transition-colors">
+        <button
+          onClick={handleChatWithSeller}
+          disabled={initiatingChat}
+          className="flex items-center gap-1.5 hover:text-[#087443] transition-colors cursor-pointer disabled:opacity-50"
+        >
           <MessageCircle className="w-4 h-4 text-[#087443]" />
-          <span>Chat with Seller</span>
-        </Link>
+          <span>{initiatingChat ? 'Connecting...' : 'Chat with Seller'}</span>
+        </button>
         <button
           onClick={() => setIsWishlisted(!isWishlisted)}
           className={`flex items-center gap-1.5 transition-colors cursor-pointer ${
@@ -224,20 +309,22 @@ export function ProductActions({
       <div className="grid grid-cols-3 gap-2 text-center text-[11px] text-[#6B7C74]">
         <div className="p-2.5 rounded-xl bg-white border border-[#E5EDE9] flex flex-col items-center gap-1">
           <Lock className="w-4 h-4 text-[#087443]" />
-          <span className="font-bold text-[#0D1F17]">Secure Payments</span>
-          <span className="text-[9px] text-[#9CB3AA]">Protected Escrow</span>
+          <span className="font-bold text-[#0D1F17]">Escrow Safe</span>
+          <span className="text-[9px] text-[#9CB3AA]">Funds Protected</span>
         </div>
         <div className="p-2.5 rounded-xl bg-white border border-[#E5EDE9] flex flex-col items-center gap-1">
           <Shield className="w-4 h-4 text-[#087443]" />
-          <span className="font-bold text-[#0D1F17]">Buyer Protection</span>
-          <span className="text-[9px] text-[#9CB3AA]">Full refund policy</span>
+          <span className="font-bold text-[#0D1F17]">Verified Stores</span>
+          <span className="text-[9px] text-[#9CB3AA]">Enugu Merchants</span>
         </div>
         <div className="p-2.5 rounded-xl bg-white border border-[#E5EDE9] flex flex-col items-center gap-1">
           <Award className="w-4 h-4 text-[#087443]" />
-          <span className="font-bold text-[#0D1F17]">Quality Assured</span>
-          <span className="text-[9px] text-[#9CB3AA]">Verified Seller</span>
+          <span className="font-bold text-[#0D1F17]">Quality First</span>
+          <span className="text-[9px] text-[#9CB3AA]">Authentic Goods</span>
         </div>
       </div>
     </div>
   );
 }
+
+export default ProductActions;

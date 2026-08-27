@@ -29,7 +29,7 @@ export default function HomePage() {
       <Navbar />
 
       {/* ── 2. Main Marketplace Flow (Static locked viewport, zero horizontal shift) ── */}
-      <main className="flex-1 pb-20 md:pb-0 w-full max-w-full overflow-x-hidden">
+      <main className="flex-1 pb-24 md:pb-0 w-full max-w-full overflow-x-hidden">
         {/* 1. Hero Area: Left Intro + Right Live Hot Deals Centerpiece Carousel */}
         <AboveTheFold />
 

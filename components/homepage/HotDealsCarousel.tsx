@@ -14,97 +14,105 @@ interface DealCardItem {
   name: string;
   spec: string;
   price: number;
-  originalPrice?: number;
+  originalPrice: number;
   discount: number;
   rating: number;
+  reviews: number;
   location: string;
   imageUrl: string;
   imageBg: string;
   seller: string;
-  isVerified?: boolean;
+  isVerified: boolean;
 }
 
 const DEALS: DealCardItem[] = [
   {
-    id: '1',
+    id: 'deal_1',
     name: 'iPhone 13 Pro Max',
-    spec: '256GB · Graphite',
+    spec: '256GB • Graphite • 92% Battery',
     price: 580000,
     originalPrice: 650000,
     discount: 11,
     rating: 4.8,
-    location: 'Nsukka',
-    imageUrl: 'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=400&q=80',
-    imageBg: '#0F172A',
+    reviews: 32,
+    location: 'Nsukka, Enugu',
+    imageUrl: 'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=500&q=80',
+    imageBg: '#F8FAFC',
     seller: 'Kingsok Gadgets',
     isVerified: true,
   },
   {
-    id: '2',
-    name: 'HP Pavilion 15',
-    spec: 'Core i5 · 8GB RAM',
-    price: 420000,
-    discount: 8,
-    rating: 4.6,
-    location: 'Enugu',
-    imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80',
-    imageBg: '#1E293B',
+    id: 'deal_2',
+    name: 'HP Pavilion 15 Gaming',
+    spec: 'Core i5 12th Gen • 16GB • RTX 3050',
+    price: 520000,
+    originalPrice: 600000,
+    discount: 13,
+    rating: 4.9,
+    reviews: 45,
+    location: 'UNEC Campus, Enugu',
+    imageUrl: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&q=80',
+    imageBg: '#F8FAFC',
     seller: 'TechZone Enugu',
     isVerified: true,
   },
   {
-    id: '3',
-    name: 'Nike Air Force 1',
-    spec: 'White · Size 42',
-    price: 145000,
-    originalPrice: 175000,
-    discount: 17,
+    id: 'deal_3',
+    name: 'Nike Air Jordan 1 Low',
+    spec: 'Black Toe • Size 42 • Brand New',
+    price: 85000,
+    originalPrice: 110000,
+    discount: 22,
     rating: 4.7,
-    location: 'Abakpa',
-    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80',
+    reviews: 28,
+    location: 'UNN Franco, Nsukka',
+    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80',
     imageBg: '#F8FAFC',
     seller: 'SneakerHub NG',
-    isVerified: false,
+    isVerified: true,
   },
   {
-    id: '4',
-    name: 'Study Table',
-    spec: 'Wooden · Premium',
-    price: 28000,
-    originalPrice: 35000,
-    discount: 20,
-    rating: 4.5,
-    location: 'Ogui',
-    imageUrl: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80',
-    imageBg: '#451A03',
+    id: 'deal_4',
+    name: 'Solid Wood Student Desk',
+    spec: 'Double Drawer • Modern Teak Finish',
+    price: 32000,
+    originalPrice: 42000,
+    discount: 24,
+    rating: 4.6,
+    reviews: 17,
+    location: 'Hilltop UNN, Nsukka',
+    imageUrl: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=500&q=80',
+    imageBg: '#F8FAFC',
     seller: 'Campus Furnish',
     isVerified: false,
   },
   {
-    id: '5',
-    name: 'Canon EOS M50 II',
-    spec: 'Mirrorless · 15-45mm',
-    price: 650000,
-    originalPrice: 760000,
-    discount: 15,
-    rating: 4.6,
-    location: 'Nsukka',
-    imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&q=80',
-    imageBg: '#0A2540',
-    seller: 'GadgetHub NG',
+    id: 'deal_5',
+    name: 'Sony WH-1000XM4',
+    spec: 'Industry Leading Noise Canceling',
+    price: 210000,
+    originalPrice: 260000,
+    discount: 19,
+    rating: 4.9,
+    reviews: 54,
+    location: 'New Haven, Enugu',
+    imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80',
+    imageBg: '#F8FAFC',
+    seller: 'SoundZone NG',
     isVerified: true,
   },
   {
-    id: '6',
-    name: 'Samsung Galaxy A54',
-    spec: '128GB · Awesome Black',
-    price: 310000,
-    originalPrice: 345000,
-    discount: 10,
-    rating: 4.4,
-    location: 'Enugu',
-    imageUrl: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400&q=80',
-    imageBg: '#1E1B4B',
+    id: 'deal_6',
+    name: 'Samsung Galaxy S22 Ultra',
+    spec: '256GB • Phantom Black • Dual SIM',
+    price: 490000,
+    originalPrice: 560000,
+    discount: 12,
+    rating: 4.8,
+    reviews: 36,
+    location: 'Ogui Road, Enugu',
+    imageUrl: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=500&q=80',
+    imageBg: '#F8FAFC',
     seller: 'PhoneWorld NG',
     isVerified: true,
   },
@@ -116,39 +124,43 @@ export function HotDealsCarousel() {
 
   const scroll = useCallback((direction: 'left' | 'right') => {
     if (!scrollRef.current) return;
-    const offset = direction === 'left' ? -240 : 240;
+    const offset = direction === 'left' ? -260 : 260;
     scrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
   }, []);
 
-  // Auto-scroll the strip
+  // Auto-scroll the strip gently
   useEffect(() => {
     if (isPaused) return;
-    const interval = setInterval(() => scroll('right'), 4500);
+    const interval = setInterval(() => scroll('right'), 5000);
     return () => clearInterval(interval);
   }, [isPaused, scroll]);
 
   return (
-    <section className="w-full max-w-full bg-[#F8FAF9] py-6 sm:py-8 border-b border-[#E5EDE9] overflow-hidden">
+    <section className="w-full max-w-full bg-[#F8FAF9] py-6 sm:py-10 border-b border-[#E5EDE9] overflow-hidden">
       <div className="max-w-[1440px] mx-auto px-3.5 sm:px-8 lg:px-12">
 
         {/* Section Header */}
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-2">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-base text-amber-500">🔥</span>
-              <h2 className="text-sm sm:text-base font-black text-[#0D1F17]">More Hot Deals</h2>
-              <span className="text-[10px] font-bold text-[#087443] bg-[#E8F8EF] px-2 py-0.5 rounded-full">
+              <h2 className="text-sm sm:text-base font-black text-[#0D1F17] tracking-tight">
+                More Hot Deals
+              </h2>
+              <span className="text-[10px] font-bold text-[#087443] bg-[#E8F8EF] px-2 py-0.5 rounded-full border border-[#087443]/15">
                 Limited Time
               </span>
             </div>
-            <p className="text-xs text-[#6B7C74] mt-0.5">Handpicked deals you don&apos;t want to miss</p>
+            <p className="text-[11px] sm:text-xs text-[#6B7C74] mt-0.5">
+              Handpicked deals with verified discounts from top Enugu campus sellers
+            </p>
           </div>
 
           {/* Controls */}
           <div className="flex items-center gap-3">
             <Link
               href="/browse?filter=deals"
-              className="text-xs sm:text-sm font-bold text-[#087443] hover:text-[#053D24] flex items-center gap-1 transition-colors"
+              className="text-xs sm:text-sm font-bold text-[#087443] hover:text-[#053D24] flex items-center gap-1 transition-colors shrink-0"
             >
               <span>View all deals</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -157,14 +169,14 @@ export function HotDealsCarousel() {
             <div className="hidden sm:flex items-center gap-1.5 ml-1">
               <button
                 onClick={() => scroll('left')}
-                className="w-8 h-8 rounded-full border border-[#E5EDE9] bg-white hover:bg-[#F0FBF4] text-slate-700 flex items-center justify-center transition-colors cursor-pointer shadow-sm"
+                className="w-8 h-8 rounded-full border border-[#E5EDE9] bg-white hover:bg-[#F0FBF4] text-slate-700 flex items-center justify-center transition-colors cursor-pointer shadow-xs"
                 aria-label="Previous deal"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={() => scroll('right')}
-                className="w-8 h-8 rounded-full border border-[#E5EDE9] bg-white hover:bg-[#F0FBF4] text-slate-700 flex items-center justify-center transition-colors cursor-pointer shadow-sm"
+                className="w-8 h-8 rounded-full border border-[#E5EDE9] bg-white hover:bg-[#F0FBF4] text-slate-700 flex items-center justify-center transition-colors cursor-pointer shadow-xs"
                 aria-label="Next deal"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -180,27 +192,25 @@ export function HotDealsCarousel() {
           onMouseLeave={() => setIsPaused(false)}
           onTouchStart={() => setIsPaused(true)}
           onTouchEnd={() => setIsPaused(false)}
-          className="flex gap-2.5 sm:gap-4 overflow-x-auto pb-2 scrollbar-none [scrollbar-width:none] snap-x snap-mandatory"
+          className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-none [scrollbar-width:none] snap-x snap-mandatory"
         >
           {DEALS.map((deal) => (
             <Link
               key={deal.id}
               href={`/products/${deal.id}`}
-              className="w-[160px] xs:w-[175px] sm:w-[200px] lg:w-[220px] shrink-0 bg-white rounded-2xl border border-[#E5EDE9] overflow-hidden hover:border-[#087443]/50 hover:shadow-md transition-all flex flex-col justify-between group snap-start cursor-pointer shadow-2xs"
+              className="w-[170px] xs:w-[185px] sm:w-[210px] lg:w-[230px] shrink-0 bg-white rounded-2xl border border-[#E5EDE9] overflow-hidden hover:border-[#087443]/50 hover:shadow-md transition-all flex flex-col justify-between group snap-start cursor-pointer shadow-2xs"
             >
               {/* Product Image Area */}
-              <div
-                className="relative w-full aspect-4/3 overflow-hidden flex items-center justify-center"
-                style={{ background: deal.imageBg }}
-              >
+              <div className="relative w-full aspect-4/3 overflow-hidden bg-slate-50 flex items-center justify-center">
                 <Image
                   src={deal.imageUrl}
                   alt={deal.name}
                   fill
-                  className="object-contain p-3 transition-transform duration-300 group-hover:scale-105"
-                  sizes="(max-width: 640px) 175px, (max-width: 1024px) 200px, 220px"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  sizes="(max-width: 640px) 185px, (max-width: 1024px) 210px, 230px"
                 />
-                {/* Discount badge */}
+
+                {/* Discount Badge */}
                 <div className="absolute top-2 left-2 z-10">
                   <DiscountBadge percent={deal.discount} />
                 </div>
@@ -209,39 +219,40 @@ export function HotDealsCarousel() {
               {/* Product Details */}
               <div className="p-3 flex-1 flex flex-col justify-between">
                 <div>
-                  <h3 className="text-xs font-bold text-[#0D1F17] truncate group-hover:text-[#087443] transition-colors leading-tight">
+                  <h3 className="text-xs font-bold text-[#0D1F17] truncate group-hover:text-[#087443] transition-colors leading-snug">
                     {deal.name}
                   </h3>
-                  <p className="text-[10px] text-[#9CB3AA] truncate mt-0.5">{deal.spec}</p>
+                  <p className="text-[10px] text-[#9CB3AA] truncate mt-0.5">
+                    {deal.spec}
+                  </p>
 
                   <div className="flex items-baseline gap-1.5 mt-2 flex-wrap">
                     <span className="text-xs sm:text-sm font-black text-[#087443]">
                       ₦{deal.price.toLocaleString()}
                     </span>
-                    {deal.originalPrice && (
-                      <span className="text-[10px] text-[#9CB3AA] line-through">
-                        ₦{deal.originalPrice.toLocaleString()}
-                      </span>
-                    )}
+                    <span className="text-[9.5px] text-[#9CB3AA] line-through">
+                      ₦{deal.originalPrice.toLocaleString()}
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] text-[#6B7C74] mt-2.5 pt-2 border-t border-[#E5EDE9]">
-                  {deal.isVerified ? (
-                    <span className="flex items-center gap-0.5 text-[#087443] font-bold">
-                      <ShieldCheck className="w-3 h-3" />
-                      <span>Verified</span>
+                <div className="mt-2.5 pt-2 border-t border-[#E5EDE9] space-y-1">
+                  <div className="flex items-center justify-between text-[10px] text-[#6B7C74]">
+                    <span className="flex items-center gap-0.5 truncate max-w-[85px] font-medium">
+                      {deal.isVerified && <ShieldCheck className="w-3 h-3 text-[#087443] shrink-0" />}
+                      <span className="truncate">{deal.seller}</span>
                     </span>
-                  ) : (
-                    <span className="flex items-center gap-0.5 text-amber-500 font-bold">
-                      <Star className="w-3 h-3 fill-current" />
+
+                    <span className="flex items-center gap-0.5 text-amber-500 font-bold shrink-0">
+                      <Star className="w-2.5 h-2.5 fill-current" />
                       <span>{deal.rating}</span>
                     </span>
-                  )}
-                  <span className="flex items-center gap-0.5 text-[#9CB3AA]">
-                    <MapPin className="w-2.5 h-2.5" />
-                    <span>{deal.location}</span>
-                  </span>
+                  </div>
+
+                  <div className="flex items-center gap-0.5 text-[9px] text-[#9CB3AA] truncate">
+                    <MapPin className="w-2.5 h-2.5 shrink-0" />
+                    <span className="truncate">{deal.location}</span>
+                  </div>
                 </div>
               </div>
             </Link>

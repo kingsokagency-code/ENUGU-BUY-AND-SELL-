@@ -289,11 +289,16 @@ export async function checkUserSellerStatus(userId: string): Promise<SellerStatu
  * Get current authenticated user session
  */
 export async function getCurrentUser() {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  return { user, error };
+  try {
+    const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+    if (session?.user) {
+      return { user: session.user, session, error: null };
+    }
+    const { data: { user }, error } = await supabase.auth.getUser();
+    return { user, session: null, error };
+  } catch (err: unknown) {
+    return { user: null, session: null, error: err as any };
+  }
 }
 
 /**

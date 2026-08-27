@@ -9,47 +9,45 @@ interface SellerKPIGridProps {
   totalOrders?: number;
   newCustomers?: number;
   rating?: number;
+  isDemo?: boolean;
 }
 
 export function SellerKPIGrid({
-  totalSales = 1250000,
-  totalOrders = 56,
-  newCustomers = 142,
-  rating = 4.8,
+  totalSales = 0,
+  totalOrders = 0,
+  newCustomers = 0,
+  rating = 5.0,
+  isDemo = false,
 }: SellerKPIGridProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       <MetricCard
         label="Total Sales"
         value={`₦${totalSales.toLocaleString()}`}
-        change={23.5}
         icon={<DollarSign className="w-4 h-4" />}
         dark={true}
-        isDemo={true}
+        isDemo={isDemo}
       />
       <MetricCard
         label="Orders"
         value={totalOrders.toString()}
-        change={18.2}
         icon={<ShoppingBag className="w-4 h-4" />}
         dark={true}
-        isDemo={true}
+        isDemo={isDemo}
       />
       <MetricCard
-        label="New Customers"
+        label="Customers"
         value={newCustomers.toString()}
-        change={31.4}
         icon={<Users className="w-4 h-4" />}
         dark={true}
-        isDemo={true}
+        isDemo={isDemo}
       />
       <MetricCard
         label="Store Rating"
         value={rating.toFixed(1)}
-        change={0.6}
         icon={<Star className="w-4 h-4 fill-current" />}
         dark={true}
-        isDemo={true}
+        isDemo={isDemo}
       />
     </div>
   );

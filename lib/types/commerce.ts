@@ -45,6 +45,9 @@ export interface CartItem {
   user_id: string;
   product_id: string;
   quantity: number;
+  unit_price?: number;
+  subtotal?: number;
+  is_available?: boolean;
   created_at: string;
   updated_at: string;
   // Joined relation

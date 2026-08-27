@@ -1,10 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ShieldCheck, Star, Users, MessageCircle, UserPlus, Check, Award, Truck, RotateCcw, Lock } from 'lucide-react';
 import { TrustBadge } from '@/components/ebs-ui/TrustBadge';
+import { getCurrentUser } from '@/lib/auth';
+import { initiateProductConversation } from '@/lib/messaging-client';
 
 interface StoreHeroProps {
+  id?: string;
   name: string;
   category?: string;
   description?: string;
@@ -14,6 +18,7 @@ interface StoreHeroProps {
   isVerified?: boolean;
   location?: string;
   slug?: string;
+  featuredProductId?: string;
 }
 
 export function StoreHero({
@@ -25,11 +30,48 @@ export function StoreHero({
   followersCount = 1245,
   isVerified = true,
   location = 'UNN Main Campus, Nsukka',
+  slug = 'store',
+  featuredProductId,
 }: StoreHeroProps) {
+  const router = useRouter();
   const [following, setFollowing] = useState(false);
+  const [currentFollowers, setCurrentFollowers] = useState(followersCount);
+  const [connecting, setConnecting] = useState(false);
 
   const getInitials = (n: string) => {
     return n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'EBS';
+  };
+
+  const handleFollowToggle = () => {
+    setFollowing(prev => {
+      const next = !prev;
+      setCurrentFollowers(f => next ? f + 1 : Math.max(0, f - 1));
+      return next;
+    });
+  };
+
+  const handleMessageStore = async () => {
+    try {
+      setConnecting(true);
+      const { user } = await getCurrentUser();
+      if (!user) {
+        router.push(`/auth?redirect=${encodeURIComponent(`/shops/${slug}`)}`);
+        return;
+      }
+
+      if (featuredProductId) {
+        const res = await initiateProductConversation(featuredProductId);
+        if (res.success && res.conversation?.id) {
+          router.push(`/conversations/${res.conversation.id}`);
+          return;
+        }
+      }
+      router.push('/conversations');
+    } catch {
+      router.push('/conversations');
+    } finally {
+      setConnecting(false);
+    }
   };
 
   return (
@@ -68,7 +110,7 @@ export function StoreHero({
               </div>
               <div className="flex items-center gap-1">
                 <Users className="w-3.5 h-3.5 text-[#0A8A50]" />
-                <span className="text-white font-semibold">{followersCount.toLocaleString()}</span>
+                <span className="text-white font-semibold">{currentFollowers.toLocaleString()}</span>
                 <span>Followers</span>
               </div>
               {location && (
@@ -79,7 +121,7 @@ export function StoreHero({
             {/* Follow & Message Buttons */}
             <div className="flex items-center gap-3 mt-5 justify-center sm:justify-start">
               <button
-                onClick={() => setFollowing(!following)}
+                onClick={handleFollowToggle}
                 className={`inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   following
                     ? 'bg-white/10 text-white border border-white/20'
@@ -90,13 +132,14 @@ export function StoreHero({
                 <span>{following ? 'Following' : '+ Follow'}</span>
               </button>
 
-              <a
-                href="#message"
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#087443] hover:bg-[#0A8A50] text-white text-xs font-bold transition-all shadow-md shadow-[#087443]/30"
+              <button
+                onClick={handleMessageStore}
+                disabled={connecting}
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#087443] hover:bg-[#0A8A50] text-white text-xs font-bold transition-all shadow-md shadow-[#087443]/30 cursor-pointer disabled:opacity-50"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
-                <span>Message</span>
-              </a>
+                <span>{connecting ? 'Connecting...' : 'Message'}</span>
+              </button>
             </div>
           </div>
         </div>

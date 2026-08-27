@@ -21,26 +21,14 @@ interface MessageItem {
   created_at: string;
 }
 
+import { getConversationMessages, sendMessage, MessageRecord, ConversationProduct } from '@/lib/messaging-client';
+
 interface ConversationData {
   id: string;
   buyer_id: string;
   seller_id: string;
   product_id: string;
-  products?: {
-    id: string;
-    name: string;
-    price: number;
-    condition: string;
-    location: string;
-    images?: string[];
-    status: string;
-    shops?: {
-      id: string;
-      name: string;
-      slug: string;
-      is_verified?: boolean;
-    };
-  };
+  products?: ConversationProduct;
 }
 
 export default function ActiveConversationPage({
@@ -51,7 +39,7 @@ export default function ActiveConversationPage({
   const { id: conversationId } = use(params);
 
   const [conversation, setConversation] = useState<ConversationData | null>(null);
-  const [messages, setMessages] = useState<MessageItem[]>([]);
+  const [messages, setMessages] = useState<MessageRecord[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
@@ -69,21 +57,16 @@ export default function ActiveConversationPage({
 
     async function loadMessages() {
       try {
-        const res = await fetch(`/api/conversations/${conversationId}/messages`);
-        if (res.status === 401) {
-          if (isMounted) setError('Authentication required');
-          return;
-        }
-        if (!res.ok) {
-          if (isMounted) setError('Conversation not found');
+        const res = await getConversationMessages(conversationId);
+        if (!res.success) {
+          if (isMounted) setError(res.error || 'Failed to load messages');
           return;
         }
 
-        const data = await res.json();
-        if (isMounted && data.success) {
-          setConversation(data.conversation);
-          setMessages(data.messages ?? []);
-          setCurrentUserId(data.current_user_id);
+        if (isMounted && res.success) {
+          setConversation(res.conversation as unknown as ConversationData);
+          setMessages(res.messages ?? []);
+          setCurrentUserId(res.current_user_id || null);
         }
       } catch {
         if (isMounted) setError('Failed to load message history');
@@ -94,8 +77,8 @@ export default function ActiveConversationPage({
 
     loadMessages();
 
-    // 5-second polling loop for live messaging
-    const interval = setInterval(loadMessages, 5000);
+    // 4-second polling loop for live messaging
+    const interval = setInterval(loadMessages, 4000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -113,16 +96,22 @@ export default function ActiveConversationPage({
     setSending(true);
     if (!textToSend) setInputText('');
 
-    try {
-      const res = await fetch(`/api/conversations/${conversationId}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: text }),
-      });
+    // Optimistic message append
+    const optimisticMsg: MessageRecord = {
+      id: `temp-${Date.now()}`,
+      conversation_id: conversationId,
+      sender_id: currentUserId || '',
+      content: text,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
 
-      const data = await res.json();
-      if (res.ok && data.success && data.message) {
-        setMessages((prev) => [...prev, data.message]);
+    try {
+      const res = await sendMessage(conversationId, text);
+      if (res.success && res.message) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === optimisticMsg.id ? res.message! : m))
+        );
       }
     } catch {
       console.warn('[CHAT] Failed to send message');

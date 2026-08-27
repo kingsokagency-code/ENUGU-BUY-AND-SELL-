@@ -46,8 +46,11 @@ interface ConversationItem {
   is_buyer: boolean;
 }
 
+import { getConversations, ConversationSummary } from '@/lib/messaging-client';
+import { getCurrentUser } from '@/lib/auth';
+
 export default function ConversationsPage() {
-  const [conversations, setConversations] = useState<ConversationItem[]>([]);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(false);
 
@@ -56,8 +59,8 @@ export default function ConversationsPage() {
 
     async function fetchInbox() {
       try {
-        const res = await fetch('/api/conversations');
-        if (res.status === 401) {
+        const { user } = await getCurrentUser();
+        if (!user) {
           if (isMounted) {
             setAuthError(true);
             setLoading(false);
@@ -65,9 +68,13 @@ export default function ConversationsPage() {
           return;
         }
 
-        const data = await res.json();
-        if (isMounted && data.success) {
-          setConversations(data.conversations ?? []);
+        if (isMounted) setAuthError(false);
+
+        const res = await getConversations();
+        if (isMounted && res.success) {
+          setConversations(res.conversations ?? []);
+        } else if (isMounted && !res.success && res.error?.includes('Authentication')) {
+          setAuthError(true);
         }
       } catch {
         console.warn('[INBOX] Failed to fetch conversations');
@@ -78,8 +85,8 @@ export default function ConversationsPage() {
 
     fetchInbox();
 
-    // 5-second lightweight polling
-    const interval = setInterval(fetchInbox, 5000);
+    // 4-second lightweight polling
+    const interval = setInterval(fetchInbox, 4000);
     return () => {
       isMounted = false;
       clearInterval(interval);

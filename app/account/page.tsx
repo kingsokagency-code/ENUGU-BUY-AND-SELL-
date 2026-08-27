@@ -1,316 +1,256 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { BuyerSidebar } from '@/components/buyer/BuyerSidebar';
-import { MetricCard } from '@/components/ebs-ui/MetricCard';
-import { OrderRow, OrderRowData } from '@/components/ebs-ui/OrderRow';
-import { BottomNav } from '@/components/ebs-ui/BottomNav';
+import { useRouter } from 'next/navigation';
+import Navbar from '@/components/layout/Navbar';
 import {
-  ShoppingBag, Heart, MessageCircle, CreditCard,
-  Compass, Clock, Store, ChevronRight,
-  Smartphone, Laptop, Shirt, Home as HomeIcon,
-  BookOpen, LogOut, Menu, X, ArrowRight,
+  ShoppingBag, Heart, MessageCircle, Clock,
+  Store, ChevronRight, Package, ShieldCheck,
+  CheckCircle2, ArrowRight, AlertCircle, LogOut,
 } from 'lucide-react';
-
-const DEMO_BUYER_ORDERS: OrderRowData[] = [
-  {
-    id: 'ord_1',
-    product: 'iPhone 13 Pro Max',
-    amount: 780000,
-    status: 'delivered',
-    date: 'May 20, 2025',
-    customer: 'Delivered',
-  },
-  {
-    id: 'ord_2',
-    product: 'Study Table',
-    amount: 45000,
-    status: 'processing',
-    date: 'May 18, 2025',
-    customer: 'Processing',
-  },
-];
-
-const TOP_CATEGORIES = [
-  { name: 'Phones & Tablets', icon: <Smartphone className="w-4 h-4" />, slug: 'phones-tablets', color: 'bg-blue-50 text-blue-600' },
-  { name: 'Electronics',      icon: <Laptop     className="w-4 h-4" />, slug: 'electronics',    color: 'bg-purple-50 text-purple-600' },
-  { name: 'Fashion',          icon: <Shirt      className="w-4 h-4" />, slug: 'fashion',        color: 'bg-pink-50 text-pink-600' },
-  { name: 'Home & Living',    icon: <HomeIcon   className="w-4 h-4" />, slug: 'home-living',    color: 'bg-amber-50 text-amber-600' },
-  { name: 'Books & Stationery',icon: <BookOpen  className="w-4 h-4" />, slug: 'books',          color: 'bg-green-50 text-green-600' },
-];
-
-const MOBILE_NAV_ITEMS = [
-  { href: '/',          label: 'Home',       icon: <HomeIcon      className="w-5 h-5" /> },
-  { href: '/browse',    label: 'Categories', icon: <Compass       className="w-5 h-5" /> },
-  { href: '/create-shop', label: 'Sell',     icon: <Store         className="w-5 h-5" />, isCenter: true },
-  { href: '/conversations', label: 'Messages', icon: <MessageCircle className="w-5 h-5" />, badge: 3 },
-  { href: '/account',   label: 'Account',    icon: <ShoppingBag   className="w-5 h-5" /> },
-];
+import { getCurrentUser, getUserProfile, signOut, checkUserSellerStatus, type UserProfile, type SellerStatus } from '@/lib/auth';
+import { getOrders } from '@/lib/commerce-client';
+import type { Order } from '@/lib/types/commerce';
 
 export default function BuyerAccountPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [hasStore] = useState(true); // Toggle to true to demo hybrid user with verified merchant
+  const router = useRouter();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [sellerStatus, setSellerStatus] = useState<SellerStatus | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  return (
-    <div className="min-h-screen bg-[#F8FAF9] flex flex-col md:flex-row">
-      {/* Desktop Buyer Sidebar */}
-      <BuyerSidebar
-        userName="Kingsley Okoye"
-        campus="University of Nigeria, Nsukka"
-        hasStore={hasStore}
-        storeName="Kingsok Gadgets"
-        storeSlug="kingsok-gadgets"
-      />
+  useEffect(() => {
+    async function loadAccountData() {
+      setLoading(true);
+      const { user } = await getCurrentUser();
+      if (!user) {
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 pb-20 md:pb-12">
-        {/* Top Header Mobile / Tablet Bar */}
-        <div className="bg-white border-b border-[#E5EDE9] px-4 py-3.5 flex items-center justify-between md:hidden sticky top-0 z-30">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-lg text-[#053D24] hover:bg-[#F0FBF4]"
-              aria-label="Toggle menu"
+      setIsAuthenticated(true);
+
+      // Load Profile
+      const { profile: userProfile } = await getUserProfile(user.id);
+      setProfile(userProfile);
+
+      // Load Seller Status
+      const status = await checkUserSellerStatus(user.id);
+      setSellerStatus(status);
+
+      // Load Real Buyer Orders
+      const orderRes = await getOrders('buyer');
+      if (orderRes.success) {
+        setOrders(orderRes.orders);
+      }
+
+      setLoading(false);
+    }
+
+    loadAccountData();
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
+
+  // 1. Unauthenticated View
+  if (!loading && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#F8FAF9] flex flex-col">
+        <Navbar />
+        <main className="flex-1 max-w-md w-full mx-auto px-4 py-16 flex flex-col items-center justify-center text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-[#E8F8EF] text-[#087443] flex items-center justify-center">
+            <ShoppingBag className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl font-black text-[#0D1F17]">My Account &amp; Orders</h1>
+          <p className="text-xs text-slate-500">Sign in to track your campus purchases, saved storefronts, and manage your profile.</p>
+          <div className="pt-2">
+            <Link
+              href="/auth?redirect=/account"
+              className="bg-[#087443] hover:bg-[#065f35] text-white text-xs font-bold px-6 py-3 rounded-xl transition-all inline-block shadow-sm"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-            <span className="font-bold text-sm text-[#053D24]">Account Hub</span>
-          </div>
-          <Link
-            href="/conversations"
-            className="relative p-2 text-[#087443] hover:bg-[#F0FBF4] rounded-lg"
-          >
-            <MessageCircle className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-          </Link>
-        </div>
-
-        {/* Mobile Slide-out Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-[#0D1F17] text-white p-5 border-b border-white/10 space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b border-white/10">
-              <div className="w-10 h-10 rounded-full bg-[#087443] flex items-center justify-center font-bold text-white">
-                KO
-              </div>
-              <div>
-                <p className="font-bold text-sm">Kingsley Okoye</p>
-                <p className="text-xs text-white/50">Campus Buyer · UNN</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <Link href="/account" className="p-2.5 rounded-xl bg-white/5 font-semibold text-[#0A8A50]">Account Overview</Link>
-              <Link href="/conversations" className="p-2.5 rounded-xl bg-white/5">Inbox (3)</Link>
-              <Link href="/account/orders" className="p-2.5 rounded-xl bg-white/5">My Orders</Link>
-              <Link href="/account/saved" className="p-2.5 rounded-xl bg-white/5">Saved Items</Link>
-              <Link href="/account/settings" className="p-2.5 rounded-xl bg-white/5">Settings</Link>
-              <Link href="/seller/dashboard" className="p-2.5 rounded-xl bg-[#087443]/30 text-[#0A8A50] font-bold">Seller Dashboard →</Link>
-            </div>
-          </div>
-        )}
-
-        {/* Inner Content Container */}
-        <main className="p-4 sm:p-6 lg:p-8 max-w-5xl space-y-8">
-          {/* Welcome Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-[#0D1F17] flex items-center gap-2">
-                Welcome back, Kingsley Okoye <span className="text-xl">👋</span>
-              </h1>
-              <p className="text-xs sm:text-sm text-[#6B7C74] mt-0.5">
-                Campus Buyer • University of Nigeria, Nsukka
-              </p>
-            </div>
-
-            {hasStore && (
-              <Link
-                href="/seller/dashboard"
-                className="inline-flex items-center gap-2 bg-[#053D24] text-[#FBBF24] hover:bg-[#032a18] px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm self-start sm:self-auto"
-              >
-                <Store className="w-4 h-4" />
-                <span>Switch to Seller Mode</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            )}
-          </div>
-
-          {/* 4 Metric / KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <MetricCard
-              label="Orders"
-              value="12"
-              subValue="View all orders"
-              icon={<ShoppingBag className="w-4 h-4" />}
-              isDemo={true}
-            />
-            <MetricCard
-              label="Saved Items"
-              value="8"
-              subValue="View favorites"
-              icon={<Heart className="w-4 h-4" />}
-              isDemo={true}
-            />
-            <MetricCard
-              label="Active Chats"
-              value="3"
-              subValue="Go to inbox"
-              icon={<MessageCircle className="w-4 h-4" />}
-              isDemo={true}
-            />
-            <MetricCard
-              label="Total Spent"
-              value="₦24,500"
-              subValue="View breakdown"
-              icon={<CreditCard className="w-4 h-4" />}
-              isDemo={true}
-            />
-          </div>
-
-          {/* Quick Access Grid */}
-          <div>
-            <h2 className="text-sm font-bold text-[#0D1F17] mb-3">Quick Access</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Link
-                href="/browse"
-                className="p-4 rounded-2xl bg-white border border-[#E5EDE9] hover:border-[#087443]/40 hover:shadow-sm transition-all flex flex-col items-center text-center gap-2 group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Compass className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-[#0D1F17]">Browse Catalog</p>
-                  <p className="text-[10px] text-[#9CB3AA]">Explore products</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/conversations"
-                className="p-4 rounded-2xl bg-white border border-[#E5EDE9] hover:border-[#087443]/40 hover:shadow-sm transition-all flex flex-col items-center text-center gap-2 group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <MessageCircle className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-[#0D1F17]">Inbox</p>
-                  <p className="text-[10px] text-[#9CB3AA]">Message sellers</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/account/orders"
-                className="p-4 rounded-2xl bg-white border border-[#E5EDE9] hover:border-[#087443]/40 hover:shadow-sm transition-all flex flex-col items-center text-center gap-2 group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Clock className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-[#0D1F17]">Track Orders</p>
-                  <p className="text-[10px] text-[#9CB3AA]">View order status</p>
-                </div>
-              </Link>
-
-              {hasStore ? (
-                <Link
-                  href="/seller/dashboard"
-                  className="p-4 rounded-2xl bg-[#087443] text-white border border-[#087443] hover:bg-[#065f35] hover:shadow-md transition-all flex flex-col items-center text-center gap-2 group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <Store className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold">My Store</p>
-                    <p className="text-[10px] text-white/80">Command Center</p>
-                  </div>
-                </Link>
-              ) : (
-                <Link
-                  href="/create-shop"
-                  className="p-4 rounded-2xl bg-[#087443] text-white border border-[#087443] hover:bg-[#065f35] hover:shadow-md transition-all flex flex-col items-center text-center gap-2 group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <Store className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold">Sell on EBS</p>
-                    <p className="text-[10px] text-white/80">Start your store</p>
-                  </div>
-                </Link>
-              )}
-            </div>
-          </div>
-
-          {/* Two Columns: Recent Orders + Top Categories */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6">
-            {/* Left: Recent Orders */}
-            <div className="bg-white rounded-2xl border border-[#E5EDE9] p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-[#0D1F17]">Recent Orders</h3>
-                <Link href="/account/orders" className="text-xs font-semibold text-[#087443] hover:underline">
-                  View All
-                </Link>
-              </div>
-
-              <div className="divide-y divide-[#E5EDE9]">
-                {DEMO_BUYER_ORDERS.map((ord) => (
-                  <div key={ord.id} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-xl bg-[#087443]/10 flex items-center justify-center text-[#087443] font-black shrink-0">
-                        {ord.product[0]}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-[#0D1F17] truncate">{ord.product}</p>
-                        <p className="text-xs font-semibold text-[#087443] mt-0.5">₦{ord.amount.toLocaleString()}</p>
-                        <p className="text-[10px] text-[#9CB3AA]">{ord.status === 'delivered' ? 'Delivered' : 'Processing'} • {ord.date}</p>
-                      </div>
-                    </div>
-
-                    <Link
-                      href={`/account/orders`}
-                      className="px-3 py-1.5 rounded-lg border border-[#E5EDE9] text-[11px] font-semibold text-[#0D1F17] hover:bg-[#F8FAF9] shrink-0"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right: Top Categories */}
-            <div className="bg-white rounded-2xl border border-[#E5EDE9] p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-[#0D1F17]">Top Categories</h3>
-                <Link href="/browse" className="text-xs font-semibold text-[#087443] hover:underline">
-                  Explore
-                </Link>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                {TOP_CATEGORIES.map((cat) => (
-                  <Link
-                    key={cat.slug}
-                    href={`/browse?category=${cat.slug}`}
-                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#F8FAF9] transition-colors group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg ${cat.color} flex items-center justify-center`}>
-                        {cat.icon}
-                      </div>
-                      <span className="text-xs font-semibold text-[#0D1F17] group-hover:text-[#087443] transition-colors">
-                        {cat.name}
-                      </span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-[#9CB3AA] group-hover:text-[#087443] group-hover:translate-x-0.5 transition-all" />
-                  </Link>
-                ))}
-              </div>
-            </div>
+              Sign In to Your Account
+            </Link>
           </div>
         </main>
       </div>
+    );
+  }
 
-      {/* Mobile Sticky Bottom Nav */}
-      <BottomNav items={MOBILE_NAV_ITEMS} activePath="/account" />
+  // 2. Loading State
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAF9] flex flex-col">
+        <Navbar />
+        <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8 space-y-4">
+          <div className="h-28 bg-white rounded-3xl border border-slate-200 animate-pulse" />
+          <div className="h-64 bg-white rounded-3xl border border-slate-200 animate-pulse" />
+        </main>
+      </div>
+    );
+  }
+
+  const totalSpent = orders.reduce((acc, o) => acc + Number(o.total_amount || 0), 0);
+  const activeOrdersCount = orders.filter(o => !['completed', 'cancelled'].includes(o.order_status)).length;
+
+  return (
+    <div className="min-h-screen bg-[#F8FAF9] flex flex-col">
+      <Navbar />
+
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3.5 sm:px-6 py-6 sm:py-8 space-y-6">
+        
+        {/* Profile Card Header */}
+        <div className="bg-white rounded-3xl border border-[#E5EDE9] p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-14 h-14 rounded-2xl bg-[#087443] text-white flex items-center justify-center font-black text-lg shrink-0 shadow-sm">
+              {(profile?.full_name || 'U').slice(0, 2).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-base sm:text-lg font-black text-[#0D1F17] truncate">
+                  {profile?.full_name || 'Campus Buyer'}
+                </h1>
+                {profile?.is_verified && <ShieldCheck className="w-4 h-4 text-[#087443] shrink-0" />}
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">{profile?.location || 'Enugu, Nigeria'}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {sellerStatus?.isSeller ? (
+              <Link
+                href="/seller/dashboard"
+                className="bg-[#053D24] hover:bg-[#032817] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-xs flex items-center gap-1.5"
+              >
+                <Store className="w-3.5 h-3.5" />
+                <span>Seller Dashboard</span>
+              </Link>
+            ) : (
+              <Link
+                href="/create-shop"
+                className="bg-[#E8F8EF] hover:bg-[#d5f3e2] text-[#087443] text-xs font-bold px-4 py-2.5 rounded-xl transition-all border border-[#087443]/20 flex items-center gap-1.5"
+              >
+                <Store className="w-3.5 h-3.5" />
+                <span>Open a Store</span>
+              </Link>
+            )}
+
+            <button
+              onClick={handleSignOut}
+              className="text-slate-500 hover:text-red-600 text-xs font-bold px-3 py-2.5 rounded-xl hover:bg-red-50 transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Real Stats Row */}
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          <div className="bg-white rounded-2xl border border-[#E5EDE9] p-4 text-center shadow-2xs">
+            <p className="text-[11px] text-slate-500 font-bold">Total Orders</p>
+            <p className="text-base sm:text-xl font-black text-[#0D1F17] mt-1">{orders.length}</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-[#E5EDE9] p-4 text-center shadow-2xs">
+            <p className="text-[11px] text-slate-500 font-bold">Active Orders</p>
+            <p className="text-base sm:text-xl font-black text-[#087443] mt-1">{activeOrdersCount}</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-[#E5EDE9] p-4 text-center shadow-2xs">
+            <p className="text-[11px] text-slate-500 font-bold">Total Spent</p>
+            <p className="text-base sm:text-xl font-black text-[#0D1F17] mt-1">₦{totalSpent.toLocaleString()}</p>
+          </div>
+        </div>
+
+        {/* Real Orders History */}
+        <div className="bg-white rounded-3xl border border-[#E5EDE9] p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E5EDE9]">
+            <h2 className="text-sm font-bold text-[#0D1F17]">Order History &amp; Tracking</h2>
+            <span className="text-xs text-slate-400">{orders.length} orders</span>
+          </div>
+
+          {orders.length === 0 ? (
+            <div className="py-12 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                <Package className="w-6 h-6" />
+              </div>
+              <p className="text-xs font-bold text-slate-700">No Orders Placed Yet</p>
+              <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
+                When you buy from verified campus merchants, your purchases will appear here with live progress tracking.
+              </p>
+              <div className="pt-2">
+                <Link
+                  href="/browse"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-[#087443] hover:underline"
+                >
+                  <span>Start Shopping</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {orders.map((ord) => {
+                const firstItem = ord.items?.[0];
+                const itemsCount = ord.items?.length || 1;
+                const isFinished = ['completed', 'delivered'].includes(ord.order_status);
+                const isCancelled = ord.order_status === 'cancelled';
+
+                return (
+                  <Link
+                    key={ord.id}
+                    href={`/orders/${ord.id}`}
+                    className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 hover:bg-slate-50/80 rounded-xl px-2 -mx-2 transition-colors group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-[#E8F8EF] text-[#087443] flex items-center justify-center font-bold text-xs shrink-0">
+                        <Package className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-bold text-slate-900 group-hover:text-[#087443] transition-colors truncate">
+                            #{ord.order_number}
+                          </p>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${
+                            isFinished
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : isCancelled
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {ord.order_status.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                          {ord.shop?.name || 'Verified Store'} • {itemsCount} {itemsCount === 1 ? 'item' : 'items'}
+                          {firstItem?.product?.name ? ` (${firstItem.product.name})` : ''}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0 flex items-center gap-2">
+                      <div>
+                        <p className="text-xs font-black text-slate-900">
+                          ₦{Number(ord.total_amount).toLocaleString()}
+                        </p>
+                        <p className="text-[10px] text-slate-400">
+                          {new Date(ord.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+      </main>
     </div>
   );
 }

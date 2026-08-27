@@ -135,12 +135,14 @@ export default function ShopDetailPage({ params }: { params: Promise<{ slug: str
 
       {/* Store Hero Banner */}
       <StoreHero
+        id={shop?.id}
         name={shop?.name || 'Kingsok Gadgets'}
         category="Electronics · Phones · Accessories"
         description={shop?.description}
         location={shop?.location}
         isVerified={shop?.is_verified ?? true}
         slug={slug}
+        featuredProductId={products[0]?.id}
       />
 
       {/* Sticky Tab Navigation */}

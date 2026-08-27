@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   BarChart3,
   Plus,
+  ShoppingBag,
 } from 'lucide-react';
 
 interface MobileSidebarProps {
@@ -68,12 +69,13 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const menuLinks = [
     { label: 'Home', href: '/', icon: Home },
     { label: 'Browse Catalog', href: '/browse', icon: LayoutGrid },
+    { label: 'Shopping Cart', href: '/cart', icon: ShoppingBag },
+    { label: 'My Orders & Account', href: '/account', icon: Package },
     { label: 'Campus Stores', href: '/shops', icon: Store },
     { label: 'Student Inbox', href: '/conversations', icon: MessageCircle },
     { label: 'Store Dashboard', href: '/seller/dashboard', icon: BarChart3 },
     { label: 'My Listings / Inventory', href: '/seller/products', icon: Package },
     { label: 'Sell Something', href: '/create-product', icon: Plus },
-    { label: 'Account Settings', href: '/auth', icon: Settings },
     { label: 'Help & Support', href: '/conversations', icon: HelpCircle },
   ];
 
