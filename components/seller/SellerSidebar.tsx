@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/brand/Logo';
 import {
-  LayoutDashboard, Package, ShoppingBag, Users, BarChart3,
-  Megaphone, Settings, Wallet, Crown, HelpCircle,
+  LayoutDashboard, Package, Boxes, ShoppingBag, Users, MessageSquare,
+  BarChart3, Megaphone, Settings, Wallet, Crown, HelpCircle,
   ExternalLink, ArrowLeft,
 } from 'lucide-react';
 
@@ -15,17 +15,21 @@ interface SellerSidebarProps {
   storeSlug?: string;
 }
 
-const NAV_ITEMS = [
-  { href: '/seller/dashboard',   label: 'Overview',       icon: <LayoutDashboard className="w-4 h-4" /> },
-  { href: '/seller/products',    label: 'Products',       icon: <Package         className="w-4 h-4" /> },
-  { href: '/seller/orders',      label: 'Orders',         icon: <ShoppingBag     className="w-4 h-4" />, badge: 6 },
-  { href: '/seller/customers',   label: 'Customers',      icon: <Users           className="w-4 h-4" /> },
-  { href: '/seller/analytics',   label: 'Analytics',      icon: <BarChart3       className="w-4 h-4" /> },
-  { href: '/seller/marketing',   label: 'Marketing',      icon: <Megaphone       className="w-4 h-4" /> },
-  { href: '/seller/settings',    label: 'Store Settings', icon: <Settings        className="w-4 h-4" /> },
-  { href: '/seller/payouts',     label: 'Payouts',        icon: <Wallet          className="w-4 h-4" /> },
-  { href: '/seller/subscriptions',label: 'Subscriptions', icon: <Crown           className="w-4 h-4" /> },
-  { href: '/seller/support',     label: 'Support',        icon: <HelpCircle      className="w-4 h-4" /> },
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  badge?: number;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { href: '/seller/dashboard',    label: 'Overview',          icon: <LayoutDashboard className="w-4 h-4" /> },
+  { href: '/seller/products',     label: 'Products',          icon: <Package         className="w-4 h-4" /> },
+  { href: '/seller/inventory',    label: 'Inventory / Stock', icon: <Boxes           className="w-4 h-4" /> },
+  { href: '/seller/orders',       label: 'Orders',            icon: <ShoppingBag     className="w-4 h-4" /> },
+  { href: '/seller/customers',    label: 'Customers CRM',     icon: <Users           className="w-4 h-4" /> },
+  { href: '/conversations',       label: 'Buyer Messages',    icon: <MessageSquare   className="w-4 h-4" /> },
+  { href: '/seller/settings',     label: 'Store Settings',    icon: <Settings        className="w-4 h-4" /> },
 ];
 
 export function SellerSidebar({

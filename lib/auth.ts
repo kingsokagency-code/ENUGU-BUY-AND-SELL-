@@ -40,6 +40,8 @@ export interface SellerStatus {
     slug: string;
     is_verified: boolean;
     location?: string;
+    description?: string | null;
+    logo_url?: string | null;
   }>;
   count: number;
 }
@@ -284,7 +286,7 @@ export async function checkUserSellerStatus(userId: string): Promise<SellerStatu
   try {
     const { data: shops, error } = await supabase
       .from('shops')
-      .select('id, name, slug, is_verified, location')
+      .select('id, name, slug, is_verified, location, description, logo_url')
       .eq('owner_id', userId)
       .order('created_at', { ascending: false });
 

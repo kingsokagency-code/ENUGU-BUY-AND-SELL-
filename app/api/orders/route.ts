@@ -174,20 +174,27 @@ export async function POST(request: Request) {
 
     // 1. Fetch authoritative product data from database
     const productIds = validated.items.map(i => i.product_id);
-    const { data: rawProducts, error: prodErr } = await admin
+    let prodQuery: any = await admin
       .from('products')
-      .select('id, name, price, status, shop_id, images')
+      .select('id, name, price, status, shop_id, images, stock_quantity')
       .in('id', productIds);
 
-    if (prodErr || !rawProducts || rawProducts.length === 0) {
+    if (prodQuery.error && prodQuery.error.message.includes('stock_quantity')) {
+      prodQuery = await admin
+        .from('products')
+        .select('id, name, price, status, shop_id, images')
+        .in('id', productIds);
+    }
+
+    if (prodQuery.error || !prodQuery.data || prodQuery.data.length === 0) {
       return NextResponse.json({ error: 'None of the requested products could be found' }, { status: 404 });
     }
 
-    const products = rawProducts as unknown as ProductFetchRow[];
+    const products = prodQuery.data as unknown as Array<ProductFetchRow & { stock_quantity?: number }>;
     const productMap = new Map(products.map(p => [p.id, p]));
 
-    // 2. Validate availability and group items by shop_id (Multi-seller safety)
-    const itemsByShop = new Map<string, Array<{ product: ProductFetchRow; quantity: number; unit_price: number; subtotal: number }>>();
+    // 2. Validate availability, stock sufficiency, and group items by shop_id
+    const itemsByShop = new Map<string, Array<{ product: ProductFetchRow & { stock_quantity?: number }; quantity: number; unit_price: number; subtotal: number }>>();
 
     for (const item of validated.items) {
       const prod = productMap.get(item.product_id);
@@ -196,6 +203,13 @@ export async function POST(request: Request) {
       }
       if (prod.status !== 'active') {
         return NextResponse.json({ error: `"${prod.name}" is no longer active for purchase` }, { status: 400 });
+      }
+
+      const availableStock = typeof prod.stock_quantity === 'number' ? prod.stock_quantity : 1;
+      if (availableStock < item.quantity) {
+        return NextResponse.json({
+          error: `Insufficient stock for "${prod.name}". Available: ${availableStock}, requested: ${item.quantity}`
+        }, { status: 400 });
       }
 
       const unitPrice = Number(prod.price);
@@ -209,7 +223,7 @@ export async function POST(request: Request) {
 
     const createdOrders = [];
 
-    // 3. Create real order per shop
+    // 3. Create real order per shop and atomically decrement stock
     for (const [shopId, shopItems] of itemsByShop.entries()) {
       const shopTotal = shopItems.reduce((acc, curr) => acc + curr.subtotal, 0);
       const orderNumber = `EBS-${Date.now().toString(36).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -253,6 +267,24 @@ export async function POST(request: Request) {
 
       if (itemsInsertErr) {
         throw new Error(`Failed to create order items: ${itemsInsertErr.message}`);
+      }
+
+      // Deduct stock for ordered items
+      for (const item of shopItems) {
+        const currentStock = typeof item.product.stock_quantity === 'number' ? item.product.stock_quantity : 1;
+        const newStock = Math.max(0, currentStock - item.quantity);
+        const newStatus = newStock === 0 ? 'sold' : 'active';
+
+        try {
+          await admin
+            .from('products')
+            .update({
+              stock_quantity: newStock,
+              status: newStatus,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', item.product.id);
+        } catch {}
       }
 
       createdOrders.push(order);

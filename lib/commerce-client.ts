@@ -220,3 +220,104 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
     return { success: false, error: msg };
   }
 }
+
+/**
+ * Fetch all products owned by the authenticated seller's shops
+ */
+export async function getSellerProducts(): Promise<{ success: boolean; count: number; products: any[]; error?: string }> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch('/api/products?seller=true', { headers, cache: 'no-store' });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, count: 0, products: [], error: data.error || 'Failed to fetch seller products' };
+    }
+    return data;
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Error fetching seller products';
+    return { success: false, count: 0, products: [], error: msg };
+  }
+}
+
+/**
+ * Update product details, stock, or status
+ */
+export async function updateProduct(productId: string, payload: Record<string, unknown>): Promise<{ success: boolean; product?: any; error?: string }> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/products/${productId}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, error: data.error || 'Failed to update product' };
+    }
+    return { success: true, product: data.product };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Error updating product';
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Safely archive product
+ */
+export async function archiveProduct(productId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/products/${productId}`, {
+      method: 'DELETE',
+      headers,
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, error: data.error || 'Failed to archive product' };
+    }
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Error archiving product';
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Fetch seller customers CRM list
+ */
+export async function getSellerCustomers(): Promise<{ success: boolean; count: number; customers: any[]; error?: string }> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch('/api/seller/customers', { headers, cache: 'no-store' });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, count: 0, customers: [], error: data.error || 'Failed to fetch customers' };
+    }
+    return data;
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Error fetching customers';
+    return { success: false, count: 0, customers: [], error: msg };
+  }
+}
+
+/**
+ * Update seller shop settings
+ */
+export async function updateShopSettings(shopId: string, payload: Record<string, unknown>): Promise<{ success: boolean; shop?: any; error?: string }> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/shops/${shopId}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, error: data.error || 'Failed to update shop' };
+    }
+    return { success: true, shop: data.shop };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Error updating shop';
+    return { success: false, error: msg };
+  }
+}

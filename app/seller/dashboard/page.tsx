@@ -150,7 +150,7 @@ export default function SellerDashboardPage() {
                 Quick Store Actions
               </h3>
 
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <Link
                   href="/seller/orders"
                   className="flex items-center justify-between p-3 rounded-xl bg-[#111D17] hover:bg-[#243320] border border-[#243320] transition-colors group"
@@ -163,23 +163,34 @@ export default function SellerDashboardPage() {
                 </Link>
 
                 <Link
-                  href="/seller/products"
+                  href="/seller/inventory"
                   className="flex items-center justify-between p-3 rounded-xl bg-[#111D17] hover:bg-[#243320] border border-[#243320] transition-colors group"
                 >
                   <div className="flex items-center gap-2.5 text-xs text-white">
                     <Package className="w-4 h-4 text-[#0A8A50]" />
-                    <span>Manage Inventory</span>
+                    <span>Manage Stock &amp; Inventory</span>
                   </div>
                   <span className="text-[#0A8A50] text-xs group-hover:translate-x-0.5 transition-transform">→</span>
                 </Link>
 
                 <Link
-                  href="/create-product"
+                  href="/seller/customers"
                   className="flex items-center justify-between p-3 rounded-xl bg-[#111D17] hover:bg-[#243320] border border-[#243320] transition-colors group"
                 >
                   <div className="flex items-center gap-2.5 text-xs text-white">
-                    <Plus className="w-4 h-4 text-[#0A8A50]" />
-                    <span>Post New Product</span>
+                    <Users className="w-4 h-4 text-[#0A8A50]" />
+                    <span>Customers CRM ({newCustomers} buyers)</span>
+                  </div>
+                  <span className="text-[#0A8A50] text-xs group-hover:translate-x-0.5 transition-transform">→</span>
+                </Link>
+
+                <Link
+                  href="/conversations"
+                  className="flex items-center justify-between p-3 rounded-xl bg-[#111D17] hover:bg-[#243320] border border-[#243320] transition-colors group"
+                >
+                  <div className="flex items-center gap-2.5 text-xs text-white">
+                    <Store className="w-4 h-4 text-[#0A8A50]" />
+                    <span>Buyer Messages &amp; Inquiries</span>
                   </div>
                   <span className="text-[#0A8A50] text-xs group-hover:translate-x-0.5 transition-transform">→</span>
                 </Link>
