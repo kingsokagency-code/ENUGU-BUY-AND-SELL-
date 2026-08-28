@@ -73,17 +73,67 @@ export async function POST(request: Request) {
     // 2. Server-side Zod Validation
     const validated = createShopSchema.parse(body);
 
-    // 3. Database Mutation
+    // 3. Check if user already owns a shop
     const admin = getAdminClient();
-    const { data: shop, error: dbErr } = await admin
+    const { data: userExistingShop } = await admin
       .from('shops')
-      .insert({
-        owner_id: user.id,
+      .select('*')
+      .eq('owner_id', user.id)
+      .maybeSingle();
+
+    if (userExistingShop) {
+      // User already has a shop -> update it smoothly
+      const updateData: Record<string, unknown> = {
         name: validated.name,
-        slug: validated.slug,
         description: validated.description,
         location: validated.location ?? 'Enugu',
-      })
+        updated_at: new Date().toISOString(),
+      };
+      if (typeof validated.logo_url === 'string') {
+        updateData.logo_url = validated.logo_url || null;
+      }
+
+      const { data: updatedShop, error: updErr } = await admin
+        .from('shops')
+        .update(updateData)
+        .eq('id', userExistingShop.id)
+        .select()
+        .single();
+
+      if (updErr) {
+        return NextResponse.json({ error: updErr.message }, { status: 400 });
+      }
+
+      return NextResponse.json({ success: true, shop: updatedShop, message: 'Shop updated successfully' }, { status: 200 });
+    }
+
+    // 4. Check if slug is taken by another user -> generate unique slug
+    let targetSlug = validated.slug;
+    const { data: existingSlugShop } = await admin
+      .from('shops')
+      .select('id')
+      .eq('slug', targetSlug)
+      .maybeSingle();
+
+    if (existingSlugShop) {
+      targetSlug = `${validated.slug}-${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
+    // 5. Database Insertion
+    const insertData: Record<string, unknown> = {
+      owner_id: user.id,
+      name: validated.name,
+      slug: targetSlug,
+      description: validated.description,
+      location: validated.location ?? 'Enugu',
+    };
+    if (typeof validated.logo_url === 'string' && validated.logo_url) {
+      insertData.logo_url = validated.logo_url;
+    }
+
+    const { data: shop, error: dbErr } = await admin
+      .from('shops')
+      .insert(insertData)
       .select()
       .single();
 
@@ -105,6 +155,7 @@ export async function POST(request: Request) {
     if (err && typeof err === 'object' && 'errors' in err) {
       return NextResponse.json({ error: 'Validation Error', details: (err as { errors: unknown }).errors }, { status: 400 });
     }
-    return NextResponse.json({ error: 'Server Error' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Server Error';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

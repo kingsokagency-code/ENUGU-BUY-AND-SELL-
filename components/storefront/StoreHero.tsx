@@ -50,9 +50,12 @@ export function StoreHero({
     });
   };
 
+  const [notice, setNotice] = useState<string | null>(null);
+
   const handleMessageStore = async () => {
     try {
       setConnecting(true);
+      setNotice(null);
       const { user } = await getCurrentUser();
       if (!user) {
         router.push(`/auth?redirect=${encodeURIComponent(`/shops/${slug}`)}`);
@@ -66,9 +69,13 @@ export function StoreHero({
           return;
         }
       }
-      router.push('/conversations');
+
+      // If store has no products listed yet
+      setNotice('This store has no active products listed yet. Inquiries will open once products are published.');
+      setTimeout(() => setNotice(null), 5000);
     } catch {
-      router.push('/conversations');
+      setNotice('Unable to start conversation at this moment.');
+      setTimeout(() => setNotice(null), 4000);
     } finally {
       setConnecting(false);
     }
@@ -141,6 +148,12 @@ export function StoreHero({
                 <span>{connecting ? 'Connecting...' : 'Message'}</span>
               </button>
             </div>
+
+            {notice && (
+              <div className="mt-3 p-3 bg-amber-500/20 border border-amber-500/30 rounded-xl text-amber-200 text-xs text-center sm:text-left animate-fadeIn">
+                {notice}
+              </div>
+            )}
           </div>
         </div>
 

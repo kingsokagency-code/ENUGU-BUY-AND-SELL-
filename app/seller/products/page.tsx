@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { getCurrentUser, checkUserSellerStatus, type SellerStatus } from '@/lib/auth';
 import { getSellerProducts, updateProduct, archiveProduct } from '@/lib/commerce-client';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 
 interface SellerProduct {
   id: string;
@@ -53,6 +54,7 @@ export default function MyProductsPage() {
   const [editName, setEditName] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editStock, setEditStock] = useState('');
+  const [editImage, setEditImage] = useState<string | null>(null);
   const [editCondition, setEditCondition] = useState('Used');
   const [editStatus, setEditStatus] = useState<'active' | 'sold' | 'archived'>('active');
   const [isSaving, setIsSaving] = useState(false);
@@ -98,7 +100,8 @@ export default function MyProductsPage() {
     setEditingProduct(p);
     setEditName(p.name);
     setEditPrice(String(p.price));
-    setEditStock(String(p.stock_quantity ?? 1));
+    setEditStock(String(p.stock_quantity ?? (p.status === 'sold' ? 0 : 1)));
+    setEditImage(p.images && p.images.length > 0 ? p.images[0] : null);
     setEditCondition(p.condition || 'Used');
     setEditStatus(p.status || 'active');
   };
@@ -122,13 +125,26 @@ export default function MyProductsPage() {
     setIsSaving(true);
     setErrorMessage(null);
 
-    const res = await updateProduct(editingProduct.id, {
+    // Determine coherent status: stock = 0 implies 'sold'
+    let effectiveStatus = editStatus;
+    if (numStock === 0 && editStatus === 'active') {
+      effectiveStatus = 'sold';
+    } else if (numStock > 0 && editStatus === 'sold') {
+      effectiveStatus = 'active';
+    }
+
+    const updatePayload: Record<string, unknown> = {
       name: editName.trim(),
       price: numPrice,
       stock_quantity: numStock,
       condition: editCondition,
-      status: editStatus,
-    });
+      status: effectiveStatus,
+    };
+    if (editImage) {
+      updatePayload.images = [editImage];
+    }
+
+    const res = await updateProduct(editingProduct.id, updatePayload as any);
 
     setIsSaving(false);
 
@@ -441,6 +457,16 @@ export default function MyProductsPage() {
             </div>
 
             <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
+              {/* Product Image */}
+              <ImageUpload
+                value={editImage}
+                onChange={(url) => setEditImage(url)}
+                folder="products"
+                label="Product Photo"
+                helperText="Tap to change photo"
+                shape="square"
+              />
+
               <div className="space-y-1">
                 <label className="text-[#9CB3AA] font-bold">Product Name</label>
                 <input

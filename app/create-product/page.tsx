@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { trackEvent } from '@/lib/telemetry';
 import { getSession } from '@/lib/auth';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import { ArrowLeft, CheckCircle2, Package, Plus, Store } from 'lucide-react';
 
 interface Shop {
@@ -25,6 +26,7 @@ function CreateProductForm() {
   const [description, setDescription] = useState('');
   const [condition, setCondition] = useState('Used');
   const [location] = useState('UNEC Campus, Enugu');
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const [loadingShops, setLoadingShops] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -95,6 +97,7 @@ function CreateProductForm() {
           description,
           condition,
           location,
+          images: imageUrl ? [imageUrl] : [],
         }),
       });
       const data = await res.json();
@@ -232,6 +235,16 @@ function CreateProductForm() {
                     </select>
                   )}
                 </div>
+
+                {/* Product Photo */}
+                <ImageUpload
+                  value={imageUrl}
+                  onChange={(url) => setImageUrl(url)}
+                  folder="products"
+                  label="Product Photo *"
+                  helperText="Tap to take photo or choose from gallery"
+                  shape="square"
+                />
 
                 {/* Product Name */}
                 <div>

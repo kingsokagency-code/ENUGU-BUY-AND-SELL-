@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { getCurrentUser, checkUserSellerStatus, type SellerStatus } from '@/lib/auth';
 import { updateShopSettings } from '@/lib/commerce-client';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 
 export default function SellerSettingsPage() {
   const router = useRouter();
@@ -198,8 +199,19 @@ export default function SellerSettingsPage() {
                 />
               </div>
 
+              <div className="space-y-1.5">
+                <ImageUpload
+                  value={shopLogoUrl}
+                  onChange={(url) => setShopLogoUrl(url || '')}
+                  folder="shops"
+                  label="Store Logo / Profile Picture"
+                  helperText="Tap to take photo or choose from device gallery"
+                  shape="square"
+                />
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 sm:col-span-2">
                   <label className="text-[#9CB3AA] font-bold">Primary Campus Location</label>
                   <select
                     value={shopLocation}
@@ -218,17 +230,6 @@ export default function SellerSettingsPage() {
                     <option value="Abakpa Nike, Enugu">Abakpa Nike, Enugu</option>
                     <option value="Gariki, Enugu">Gariki, Enugu</option>
                   </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[#9CB3AA] font-bold">Logo Image URL</label>
-                  <input
-                    type="url"
-                    value={shopLogoUrl}
-                    onChange={(e) => setShopLogoUrl(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full px-3.5 py-2.5 bg-[#111D17] border border-[#243320] rounded-xl text-white placeholder-[#6B9980] focus:outline-none focus:border-[#0A8A50]"
-                  />
                 </div>
               </div>
 

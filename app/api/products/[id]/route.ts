@@ -130,8 +130,10 @@ export async function PATCH(
         return NextResponse.json({ error: 'Stock quantity cannot be negative' }, { status: 400 });
       }
       updatePayload.stock_quantity = body.stock_quantity;
-      if (body.stock_quantity === 0 && !body.status) {
-        updatePayload.status = 'sold';
+      if (body.stock_quantity === 0) {
+        updatePayload.status = body.status === 'archived' ? 'archived' : 'sold';
+      } else if (body.stock_quantity > 0 && body.status !== 'archived') {
+        updatePayload.status = 'active';
       }
     }
     if (typeof body.status === 'string') {
@@ -140,6 +142,9 @@ export async function PATCH(
         return NextResponse.json({ error: 'Invalid status. Must be active, sold, or archived' }, { status: 400 });
       }
       updatePayload.status = body.status;
+      if (body.status === 'sold' && typeof body.stock_quantity !== 'number') {
+        updatePayload.stock_quantity = 0;
+      }
     }
 
     let updateResult = await admin

@@ -11,6 +11,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Clock,
+  Store,
 } from 'lucide-react';
 
 interface MessageItem {
@@ -190,44 +191,61 @@ export default function ActiveConversationPage({
         <span className="w-10" />
       </div>
 
-      {/* Sticky Product Context Anchor Card */}
+      {/* Sticky Pinned Product Context Anchor Card */}
       {product && (
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-3 my-2 shadow-xs flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#E8F5EF] to-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
-              {product.images && product.images.length > 0 ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={product.images[0]}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Package className="w-5 h-5 text-[#087443]/70" />
-              )}
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-xs font-bold text-[#111111] truncate">{product.name}</h2>
-              <div className="flex items-center gap-2 text-[11px]">
-                <span className="font-extrabold text-[#087443]">
-                  ₦{Number(product.price).toLocaleString()}
-                </span>
-                <span className="text-[#667085]">• {product.condition}</span>
-                <span className="text-[#667085] flex items-center gap-0.5">
-                  <MapPin className="w-2.5 h-2.5 text-[#087443]" />
-                  {product.location}
-                </span>
-              </div>
-            </div>
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-3 my-2 shadow-xs space-y-2 shrink-0">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-[#087443] bg-[#E8F5EF] px-2 py-0.5 rounded-md flex items-center gap-1">
+              <span>📌 Inquiring about this item</span>
+            </span>
+            {product.shops?.slug && (
+              <Link
+                href={`/shops/${product.shops.slug}`}
+                className="text-[11px] font-bold text-[#667085] hover:text-[#087443] hover:underline flex items-center gap-1"
+              >
+                <Store className="w-3 h-3" />
+                <span>Visit {product.shops.name || 'Store'} &rarr;</span>
+              </Link>
+            )}
           </div>
 
-          <Link
-            href={`/products/${product.id}`}
-            className="text-[11px] font-bold text-[#087443] hover:underline flex items-center gap-1 shrink-0 whitespace-nowrap bg-[#E8F5EF] px-2.5 py-1.5 rounded-lg border border-[#087443]/15"
-          >
-            <span>View Item</span>
-            <ExternalLink className="w-3 h-3" />
-          </Link>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#E8F5EF] to-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
+                {product.images && product.images.length > 0 ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Package className="w-5 h-5 text-[#087443]/70" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-xs font-bold text-[#111111] truncate">{product.name}</h2>
+                <div className="flex items-center gap-2 text-[11px]">
+                  <span className="font-extrabold text-[#087443]">
+                    ₦{Number(product.price).toLocaleString()}
+                  </span>
+                  <span className="text-[#667085]">• {product.condition}</span>
+                  <span className="text-[#667085] flex items-center gap-0.5">
+                    <MapPin className="w-2.5 h-2.5 text-[#087443]" />
+                    {product.location}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href={`/products/${product.id}`}
+              className="text-[11px] font-bold text-[#087443] hover:underline flex items-center gap-1 shrink-0 whitespace-nowrap bg-[#E8F5EF] px-2.5 py-1.5 rounded-lg border border-[#087443]/15"
+            >
+              <span>View Details</span>
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+          </div>
         </div>
       )}
 

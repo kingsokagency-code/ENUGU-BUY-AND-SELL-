@@ -1,26 +1,57 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { trackEvent } from '@/lib/telemetry';
 import { getSession } from '@/lib/auth';
-import { ArrowLeft, CheckCircle2, Store, Plus } from 'lucide-react';
+import { ImageUpload } from '@/components/ui/ImageUpload';
+import { ArrowLeft, CheckCircle2, Store, Plus, Info } from 'lucide-react';
 
 export default function CreateShopPage() {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('UNEC Campus, Enugu');
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [existingShopId, setExistingShopId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdShop, setCreatedShop] = useState<{ id: string; name: string; slug: string } | null>(null);
 
+  useEffect(() => {
+    async function checkExisting() {
+      try {
+        const { session } = await getSession();
+        if (!session?.access_token) return;
+
+        const res = await fetch('/api/shops?owner=true', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.shops && data.shops.length > 0) {
+            const first = data.shops[0];
+            setName(first.name || '');
+            setSlug(first.slug || '');
+            setDescription(first.description || '');
+            setLocation(first.location || 'UNEC Campus, Enugu');
+            setLogoUrl(first.logo_url || null);
+            setExistingShopId(first.id);
+          }
+        }
+      } catch {}
+    }
+    checkExisting();
+  }, []);
+
   // Auto-generate slug from name if user hasn't edited slug manually
   const handleNameChange = (val: string) => {
     setName(val);
-    const autoSlug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    setSlug(autoSlug);
+    if (!existingShopId) {
+      const autoSlug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      setSlug(autoSlug);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +69,13 @@ export default function CreateShopPage() {
       const res = await fetch('/api/shops', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ name, slug, description, location }),
+        body: JSON.stringify({
+          name,
+          slug,
+          description,
+          location,
+          logo_url: logoUrl,
+        }),
       });
       const data = await res.json();
 
@@ -91,30 +128,51 @@ export default function CreateShopPage() {
                   Congratulations! &ldquo;{createdShop.name}&rdquo; is Live
                 </h2>
                 <p className="text-xs sm:text-sm text-[#667085] max-w-sm mx-auto">
-                  Your custom shop link is ready: <strong className="text-[#087443]">/shops/{createdShop.slug}</strong>. Now add your first product to start attracting buyers!
+                  Your custom shop link is ready: <strong className="text-[#087443]">/shops/{createdShop.slug}</strong>. You can now post products and manage incoming orders.
                 </p>
               </div>
 
               <div className="pt-3 flex flex-col sm:flex-row justify-center gap-3">
                 <Link
-                  href={`/create-product?shop_id=${createdShop.id}`}
+                  href="/seller/dashboard"
                   className="inline-flex items-center justify-center gap-1.5 bg-[#087443] hover:bg-[#065f37] text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl transition-all shadow-xs"
                 >
+                  <span>Enter Seller Dashboard &rarr;</span>
+                </Link>
+                <Link
+                  href={`/create-product?shop_id=${createdShop.id}`}
+                  className="inline-flex items-center justify-center gap-1.5 bg-white border border-[#087443] text-[#087443] hover:bg-[#E8F5EF] font-bold text-xs sm:text-sm px-6 py-3 rounded-xl transition-all shadow-xs"
+                >
                   <Plus className="w-4 h-4" />
-                  <span>Add Your First Product</span>
+                  <span>Post Product</span>
                 </Link>
                 <Link
                   href={`/shops/${createdShop.slug}`}
                   className="inline-flex items-center justify-center gap-1.5 bg-white border border-slate-300 hover:border-slate-400 text-[#111111] font-semibold text-xs sm:text-sm px-6 py-3 rounded-xl transition-all shadow-xs"
                 >
                   <Store className="w-4 h-4 text-[#667085]" />
-                  <span>View Your Store &rarr;</span>
+                  <span>View Public Store</span>
                 </Link>
               </div>
             </div>
           ) : (
             /* FORM STATE */
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+              {existingShopId && (
+                <div className="p-3 bg-[#E8F5EF] border border-[#087443]/30 rounded-xl text-xs text-[#087443] flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4 shrink-0" />
+                    <span>You own an active store: <strong>{name}</strong></span>
+                  </div>
+                  <Link
+                    href="/seller/dashboard"
+                    className="font-bold underline whitespace-nowrap text-xs hover:text-[#065f37]"
+                  >
+                    Go to Dashboard &rarr;
+                  </Link>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 
                 {error && (
@@ -127,6 +185,16 @@ export default function CreateShopPage() {
                     )}
                   </div>
                 )}
+
+                {/* Shop Logo / Storefront Photo */}
+                <ImageUpload
+                  value={logoUrl}
+                  onChange={(url) => setLogoUrl(url)}
+                  folder="shops"
+                  label="Storefront Logo / Profile Photo (Optional)"
+                  helperText="Tap to take photo or choose from gallery"
+                  shape="square"
+                />
 
                 <div>
                   <label className="block text-xs font-bold text-[#111111] mb-1">
@@ -191,9 +259,10 @@ export default function CreateShopPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#087443] hover:bg-[#065f37] disabled:opacity-50 text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-sm"
+                    className="w-full bg-[#087443] hover:bg-[#065f37] text-white font-bold text-sm py-3.5 rounded-xl transition-all shadow-xs disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    {loading ? 'Creating Shop...' : 'Publish Digital Shop'}
+                    <Store className="w-4 h-4" />
+                    <span>{loading ? 'Publishing Storefront...' : existingShopId ? 'Update Storefront' : 'Publish Storefront'}</span>
                   </button>
                 </div>
 
