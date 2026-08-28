@@ -279,7 +279,7 @@ export function AboveTheFold() {
             className="flex items-center justify-center gap-1.5 bg-[#053D24] hover:bg-[#032817] active:scale-[.98] text-white text-xs sm:text-sm font-bold py-3.5 px-2.5 rounded-2xl transition-all shadow-md shadow-[#053D24]/20 text-center min-w-0"
           >
             <ShoppingBag className="w-4 h-4 shrink-0" />
-            <span className="truncate">Shop Now →</span>
+            <span className="truncate">I Want to Buy →</span>
           </Link>
 
           <Link
@@ -287,7 +287,7 @@ export function AboveTheFold() {
             className="flex items-center justify-center gap-1.5 bg-white border-2 border-[#053D24] hover:bg-[#053D24] hover:text-white active:scale-[.98] text-[#053D24] text-xs sm:text-sm font-bold py-3.5 px-2.5 rounded-2xl transition-all text-center min-w-0"
           >
             <Store className="w-4 h-4 shrink-0" />
-            <span className="truncate">Start Selling</span>
+            <span className="truncate">I Want to Sell</span>
           </Link>
         </div>
 
@@ -508,7 +508,8 @@ export function AboveTheFold() {
                     href="/browse"
                     className="inline-flex items-center justify-center gap-2 bg-[#053D24] hover:bg-[#032817] active:scale-[.98] text-white text-sm font-bold px-6 py-3.5 rounded-2xl transition-all shadow-md shadow-[#053D24]/20"
                   >
-                    <span>Shop Now</span>
+                    <ShoppingBag className="w-4 h-4" />
+                    <span>I Want to Buy</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
 
@@ -517,7 +518,7 @@ export function AboveTheFold() {
                     className="inline-flex items-center justify-center gap-2 border-2 border-[#053D24] hover:bg-[#053D24] hover:text-white active:scale-[.98] text-[#053D24] text-sm font-bold px-6 py-3.5 rounded-2xl transition-all"
                   >
                     <Store className="w-4 h-4" />
-                    <span>Start Selling</span>
+                    <span>I Want to Sell</span>
                   </Link>
                 </div>
               </div>

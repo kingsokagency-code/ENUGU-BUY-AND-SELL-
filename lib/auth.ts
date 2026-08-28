@@ -15,6 +15,7 @@ import {
   profileCompletionSchema,
   type ProfileCompletionInput,
 } from './validations/auth';
+import { sanitizeErrorMessage } from './error-utils';
 
 export interface AuthState {
   user: User | null;
@@ -256,26 +257,23 @@ export async function updateUserProfile(
       updatePayload.avatar_url = validated.avatar_url;
     }
 
+    // Try upserting so new OAuth / email users are created seamlessly
     const { data, error } = await supabase
       .from('profiles')
-      .update(updatePayload)
-      .eq('id', userId)
+      .upsert({
+        id: userId,
+        ...updatePayload,
+      })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: sanitizeErrorMessage(error.message, 'Failed to update profile.') };
     }
 
     return { success: true, profile: data, error: null };
   } catch (err: unknown) {
-    const msg =
-      err && typeof err === 'object' && 'errors' in err
-        ? 'Invalid profile data provided.'
-        : err instanceof Error
-        ? err.message
-        : 'Profile update failed';
-    return { success: false, error: msg };
+    return { success: false, error: sanitizeErrorMessage(err, 'Failed to save profile.') };
   }
 }
 

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { GlobalNavigationWrapper } from '@/components/layout/GlobalNavigationWrapper';
 
 export const metadata: Metadata = {
   title: 'Enugu Buy & Sell — Powered by KINGSOK',
@@ -26,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased w-full max-w-full overflow-x-hidden">
       <body className="min-h-full bg-[#FAFAF8] text-[#111111] font-sans selection:bg-[#087443] selection:text-white flex flex-col w-full max-w-full overflow-x-hidden">
-        {children}
+        <GlobalNavigationWrapper>
+          {children}
+        </GlobalNavigationWrapper>
       </body>
     </html>
   );

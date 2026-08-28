@@ -16,6 +16,7 @@ import {
   signOut,
   type SellerStatus,
 } from '@/lib/auth';
+import { sanitizeErrorMessage } from '@/lib/error-utils';
 import {
   ArrowLeft,
   Mail,
@@ -135,8 +136,7 @@ function AuthContent() {
         if (res.error.isUnverified) {
           setMode('verify-notice');
         } else {
-          const msg = typeof res.error.message === 'string' ? res.error.message : 'Invalid email or password.';
-          setError(msg);
+          setError(sanitizeErrorMessage(res.error, 'Invalid email or password.'));
         }
       } else if (res.data?.user) {
         setAuthenticatedUserId(res.data.user.id);
@@ -163,8 +163,7 @@ function AuthContent() {
         }
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.';
-      setError(msg);
+      setError(sanitizeErrorMessage(err, 'An unexpected error occurred. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -185,8 +184,7 @@ function AuthContent() {
         phone: phone.trim() ? phone.trim() : undefined,
       });
       if (res.error) {
-        const errMsg = typeof res.error.message === 'string' ? res.error.message : 'Unable to create account. Please check your details.';
-        setError(errMsg);
+        setError(sanitizeErrorMessage(res.error, 'Unable to create account. Please check your details.'));
       } else if (res.data?.needsEmailVerification) {
         setMode('verify-notice');
       } else if (res.data?.user) {
@@ -198,8 +196,7 @@ function AuthContent() {
         }
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Sign up failed. Please check your network and try again.';
-      setError(msg);
+      setError(sanitizeErrorMessage(err, 'Sign up failed. Please check your details and try again.'));
     } finally {
       setLoading(false);
     }
@@ -211,7 +208,7 @@ function AuthContent() {
     setGoogleLoading(true);
     const res = await signInWithGoogle(redirectUrl);
     if (res.error) {
-      setError(res.error.message);
+      setError(sanitizeErrorMessage(res.error, 'Unable to connect with Google. Please try again.'));
       setGoogleLoading(false);
     }
   };
@@ -232,7 +229,7 @@ function AuthContent() {
     if (res.success) {
       setNotice('Verification email sent! Please check your inbox and spam folder.');
     } else {
-      setError(res.error || 'Failed to resend confirmation email. Please try again.');
+      setError(sanitizeErrorMessage(res.error, 'Failed to resend confirmation email. Please try again.'));
     }
   };
 
@@ -255,7 +252,7 @@ function AuthContent() {
       });
 
       if (!res.success) {
-        setError(res.error || 'Failed to update profile.');
+        setError(sanitizeErrorMessage(res.error, 'Failed to update profile.'));
       } else {
         const sellerRes = await checkUserSellerStatus(authenticatedUserId);
         setSellerInfo(sellerRes);
@@ -269,8 +266,8 @@ function AuthContent() {
           setMode('account-hub');
         }
       }
-    } catch {
-      setError('An unexpected error occurred while saving profile.');
+    } catch (err: unknown) {
+      setError(sanitizeErrorMessage(err, 'An unexpected error occurred while saving profile.'));
     } finally {
       setLoading(false);
     }

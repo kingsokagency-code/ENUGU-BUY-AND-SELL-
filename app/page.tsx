@@ -9,18 +9,6 @@ import { TopStoresSection } from '@/components/homepage/TopStoresSection';
 import { HotDealsCarousel } from '@/components/homepage/HotDealsCarousel';
 import { TrustStrip } from '@/components/homepage/TrustStrip';
 import { SellCTA } from '@/components/homepage/SellCTA';
-import { BottomNav } from '@/components/ebs-ui/BottomNav';
-import {
-  Home, Grid, Plus, MessageCircle, User,
-} from 'lucide-react';
-
-const MOBILE_NAV_ITEMS = [
-  { href: '/',            label: 'Home',       icon: <Home          className="w-5 h-5" /> },
-  { href: '/browse',      label: 'Categories', icon: <Grid          className="w-5 h-5" /> },
-  { href: '/create-shop', label: 'Sell',       icon: <Plus          className="w-5 h-5" />, isCenter: true },
-  { href: '/conversations', label: 'Inbox',    icon: <MessageCircle className="w-5 h-5" />, badge: 0 },
-  { href: '/account',     label: 'Account',    icon: <User          className="w-5 h-5" /> },
-];
 
 export default function HomePage() {
   return (
@@ -51,9 +39,6 @@ export default function HomePage() {
         {/* 7. Sell CTA: Digital Storefront Banner */}
         <SellCTA />
       </main>
-
-      {/* ── 3. Sticky Mobile Navigation ── */}
-      <BottomNav items={MOBILE_NAV_ITEMS} activePath="/" />
     </div>
   );
 }

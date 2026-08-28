@@ -10,9 +10,9 @@ export function BottomNav() {
   const navItems = [
     { label: 'Home', href: '/', icon: Home, exact: true },
     { label: 'Categories', href: '/browse', icon: LayoutGrid },
-    { label: 'Sell', href: '/create-product', icon: Plus, isCenter: true },
+    { label: 'Sell', href: '/create-shop', icon: Plus, isCenter: true },
     { label: 'Inbox', href: '/conversations', icon: MessageCircle },
-    { label: 'Profile', href: '/auth', icon: User },
+    { label: 'Account', href: '/account', icon: User },
   ];
 
   return (
