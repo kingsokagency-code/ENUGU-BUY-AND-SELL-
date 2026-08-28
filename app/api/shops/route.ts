@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { getAuthenticatedUser, getAdminClient } from '@/lib/server-auth';
 import { createShopSchema } from '@/lib/validations/shop';
 
 /**
@@ -13,12 +14,13 @@ export async function GET(request: Request) {
     const q = searchParams.get('q')?.trim() ?? '';
 
     if (ownerOnly) {
-      const { data: { user }, error: authErr } = await supabase.auth.getUser();
+      const { user, error: authErr } = await getAuthenticatedUser(request);
       if (authErr || !user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
-      const { data: userShops, error } = await supabase
+      const admin = getAdminClient();
+      const { data: userShops, error } = await admin
         .from('shops')
         .select('*')
         .eq('owner_id', user.id)
@@ -61,7 +63,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     // 1. Authenticate seller user session
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    const { user, error: authErr } = await getAuthenticatedUser(request);
     if (authErr || !user) {
       return NextResponse.json({ error: 'Unauthorized seller authentication required' }, { status: 401 });
     }
@@ -72,7 +74,8 @@ export async function POST(request: Request) {
     const validated = createShopSchema.parse(body);
 
     // 3. Database Mutation
-    const { data: shop, error: dbErr } = await supabase
+    const admin = getAdminClient();
+    const { data: shop, error: dbErr } = await admin
       .from('shops')
       .insert({
         owner_id: user.id,
@@ -90,7 +93,7 @@ export async function POST(request: Request) {
 
     // Log telemetry event
     try {
-      await supabase.from('analytics_events').insert({
+      await admin.from('analytics_events').insert({
         event_name: 'shop_created',
         event_data: { shop_id: shop.id, slug: shop.slug },
         user_id: user.id,

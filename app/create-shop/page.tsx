@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { trackEvent } from '@/lib/telemetry';
-
+import { getSession } from '@/lib/auth';
 import { ArrowLeft, CheckCircle2, Store, Plus } from 'lucide-react';
 
 export default function CreateShopPage() {
@@ -29,9 +29,15 @@ export default function CreateShopPage() {
     setLoading(true);
 
     try {
+      const { session } = await getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const res = await fetch('/api/shops', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ name, slug, description, location }),
       });
       const data = await res.json();
