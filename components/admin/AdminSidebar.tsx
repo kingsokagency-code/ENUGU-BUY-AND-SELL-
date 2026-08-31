@@ -7,7 +7,7 @@ import { Logo } from '@/components/brand/Logo';
 import {
   LayoutDashboard, Users, Store, Package, Grid,
   ShoppingBag, Flame, AlertOctagon, BarChart3,
-  Settings, ShieldAlert, ArrowLeft,
+  Settings, ShieldAlert, ArrowLeft, UserPlus,
 } from 'lucide-react';
 
 const ADMIN_NAV = [
@@ -16,6 +16,9 @@ const ADMIN_NAV = [
   { href: '/admin/users',    label: 'Users & Roles', icon: <Users           className="w-4 h-4" /> },
   { href: '/admin/stores',   label: 'Store Approvals',icon: <Store           className="w-4 h-4" />, badge: 3 },
   { href: '/admin/deals',    label: 'Hot Deals Mgr', icon: <Flame           className="w-4 h-4" /> },
+
+  { section: 'RECRUITMENT' },
+  { href: '/admin/applications', label: 'Team Applications', icon: <UserPlus className="w-4 h-4" /> },
 
   { section: 'OPERATIONS' },
   { href: '/admin/reports',  label: 'Moderation Queue', icon: <AlertOctagon  className="w-4 h-4" />, badge: 7 },
