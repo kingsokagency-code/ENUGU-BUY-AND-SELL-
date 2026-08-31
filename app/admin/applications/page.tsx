@@ -63,6 +63,11 @@ export default function AdminApplicationsPage() {
   const [s2Notes, setS2Notes] = useState('');
   const [s2Rec, setS2Rec] = useState('');
   const [s2Status, setS2Status] = useState<ApplicationStatus>('interview');
+  // Auth State
+  const [needsAuth, setNeedsAuth] = useState(false);
+  const [authPassword, setAuthPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const loadApplications = useCallback(async () => {
     setLoading(true);
@@ -75,12 +80,18 @@ export default function AdminApplicationsPage() {
       params.set('sort_by', sortBy);
 
       const res = await fetch(`/api/admin/applications?${params.toString()}`);
-      const data = await res.json();
+      if (res.status === 401) {
+        setNeedsAuth(true);
+        setLoading(false);
+        return;
+      }
 
+      const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Failed to load applications');
       }
 
+      setNeedsAuth(false);
       setApplications(data.applications || []);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error loading applications';
@@ -89,6 +100,30 @@ export default function AdminApplicationsPage() {
       setLoading(false);
     }
   }, [selectedArea, selectedStatus, searchQuery, sortBy]);
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: authPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setAuthError(data.error || 'Invalid admin credentials');
+        return;
+      }
+      setNeedsAuth(false);
+      loadApplications();
+    } catch {
+      setAuthError('Connection error. Please try again.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadApplications();
@@ -221,6 +256,55 @@ export default function AdminApplicationsPage() {
   const shortlistedCount = applications.filter((a) => a.application_status === 'shortlisted').length;
   const interviewCount = applications.filter((a) => a.application_status === 'interview').length;
   const acceptedCount = applications.filter((a) => a.application_status === 'accepted').length;
+
+  if (needsAuth) {
+    return (
+      <AdminLayout>
+        <div className="max-w-md mx-auto my-12 bg-[#111D17] border border-[#1D2B22] rounded-3xl p-6 sm:p-8 space-y-6 text-center shadow-2xl animate-fadeIn">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto shadow-md">
+            <ShieldCheck className="w-8 h-8" />
+          </div>
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">
+              SECURITY VERIFICATION
+            </span>
+            <h2 className="text-xl font-black text-white pt-1">Recruitment Admin Access</h2>
+            <p className="text-xs text-[#6B9980]">
+              Enter your EBS administrator passkey to view candidate applications and evaluation records.
+            </p>
+          </div>
+
+          <form onSubmit={handleAdminLogin} className="space-y-4 text-left">
+            <div className="space-y-1">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Admin Passkey
+              </label>
+              <input
+                type="password"
+                required
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 bg-[#0A1410] border border-[#1D2B22] focus:border-amber-500 rounded-xl text-white text-sm outline-none font-mono text-center"
+              />
+            </div>
+
+            {authError && (
+              <p className="text-xs text-red-400 font-bold text-center">{authError}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={authLoading}
+              className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all shadow-md shadow-amber-500/20 cursor-pointer disabled:opacity-50"
+            >
+              {authLoading ? 'Verifying...' : 'Unlock Candidate Applications'}
+            </button>
+          </form>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

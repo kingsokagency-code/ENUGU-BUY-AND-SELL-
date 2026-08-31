@@ -117,8 +117,39 @@ export default function AdminOverviewPage() {
           </Link>
         </div>
 
-        {/* Hot Deals & Moderation Operations */}
+        {/* Operations & Recruitment Column */}
         <div className="space-y-6">
+          {/* Volunteer Team Applications Card */}
+          <div className="bg-[#111D17] border border-[#1D2B22] rounded-2xl p-5 border-l-4 border-l-amber-500">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-amber-400" />
+                <h2 className="text-sm font-bold text-white">Volunteer Team Applications</h2>
+              </div>
+              <span className="text-xs bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded-full">
+                Active Funnel
+              </span>
+            </div>
+            <p className="text-xs text-[#6B9980] mb-4">
+              Real-time candidate intake, evidence-based scoring (0–100), and interview claim validation.
+            </p>
+            <div className="flex gap-2 text-xs">
+              <Link
+                href="/admin/applications"
+                className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-center font-black text-slate-950 transition-colors shadow-xs"
+              >
+                Review Applications →
+              </Link>
+              <Link
+                href="/join-team"
+                target="_blank"
+                className="px-4 py-2.5 rounded-xl bg-[#1A2820] hover:bg-[#243320] text-center font-semibold text-[#9CB3AA] border border-[#243320]"
+              >
+                View Public Page
+              </Link>
+            </div>
+          </div>
+
           {/* Hot Deals Manager Card */}
           <div className="bg-[#111D17] border border-[#1D2B22] rounded-2xl p-5">
             <div className="flex items-center justify-between mb-2">
