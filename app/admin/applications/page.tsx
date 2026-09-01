@@ -161,6 +161,22 @@ export default function AdminApplicationsPage() {
 
   // AI Evaluation State
   const [runningAIEval, setRunningAIEval] = useState(false);
+  const [runningBatchAI, setRunningBatchAI] = useState(false);
+
+  const handleBatchAIEval = async () => {
+    setRunningBatchAI(true);
+    try {
+      const res = await fetch('/api/admin/applications/batch-evaluate', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to run batch evaluation');
+      await loadApplications();
+      alert(`⚡ Successfully evaluated ${data.evaluated_count || 0} candidate application(s) with AI!`);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Error during batch evaluation');
+    } finally {
+      setRunningBatchAI(false);
+    }
+  };
 
   const handleTriggerAIEval = async () => {
     if (!selectedCandidate) return;
@@ -353,22 +369,33 @@ export default function AdminApplicationsPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-white">Volunteer Team Recruitment</h1>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2.5 py-0.5 rounded-full">
-                Evidence Engine Active
+              <span className="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-2.5 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>AI Scoring Engine Active</span>
               </span>
             </div>
             <p className="text-xs text-[#6B9980] mt-0.5">
-              Evidence-based candidate evaluation, claim validation &amp; interview scoring
+              Automated AI candidate rubric scoring, claim extraction &amp; human evaluation command
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <button
+              type="button"
+              onClick={handleBatchAIEval}
+              disabled={runningBatchAI}
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all shadow-md shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{runningBatchAI ? 'Scoring All...' : '⚡ AI Auto-Score All Candidates'}</span>
+            </button>
+
             <Link
               href="/join-team"
               target="_blank"
               className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-bold text-white transition-colors flex items-center gap-1.5"
             >
-              <span>View Public /join-team Page</span>
+              <span>View /join-team</span>
               <ExternalLink className="w-3.5 h-3.5 text-[#6B9980]" />
             </Link>
           </div>
@@ -522,7 +549,7 @@ export default function AdminApplicationsPage() {
                     className="p-4 sm:p-5 hover:bg-[#15231B] transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
                   >
                     {/* Left Info */}
-                    <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="space-y-2 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-sm font-black text-white">{app.full_name}</h3>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#1A2820] text-emerald-300 border border-[#243320]">
@@ -543,6 +570,25 @@ export default function AdminApplicationsPage() {
                         >
                           {app.application_status}
                         </span>
+                      </div>
+
+                      {/* AI Intelligence Badge */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-xs">
+                          <Sparkles className="w-3 h-3 text-amber-400" />
+                          <span>AI Evidence Score: {app.application_score > 0 ? `${app.application_score}/100` : 'Unscored'}</span>
+                          {app.application_classification && (
+                            <span className="text-[10px] text-amber-200/80 font-normal">
+                              • {app.application_classification}
+                            </span>
+                          )}
+                        </span>
+
+                        {app.evidence_levels?.accomplishment && (
+                          <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-[#1A2820] text-emerald-300 border border-[#243320]">
+                            Evidence: {app.evidence_levels.accomplishment}
+                          </span>
+                        )}
                       </div>
 
                       <p className="text-xs text-[#6B9980]">
