@@ -74,9 +74,12 @@ export interface TeamApplicationRecord {
   updated_at: string;
 }
 
+import { evaluateCandidateWithAI } from './ai-evaluation';
+
 /**
  * Submit an application to the EBS Volunteer Team
  * Enforces rate limiting, email uniqueness check, and data validation
+ * Automatically runs AI Candidate Evidence Evaluation for instant pre-scoring.
  */
 export async function submitTeamApplication(
   input: TeamApplicationInput
@@ -114,6 +117,25 @@ export async function submitTeamApplication(
       };
     }
 
+    // Run Intelligent AI Evidence Evaluation
+    const aiResult = await evaluateCandidateWithAI({
+      full_name: validated.full_name,
+      email: validated.email,
+      school_institution: validated.school_institution,
+      location: validated.location,
+      team_area: validated.team_area,
+      skills: validated.skills,
+      previous_experience: validated.previous_experience,
+      practical_accomplishment: validated.practical_accomplishment,
+      portfolio_link: validated.portfolio_link || null,
+      why_join_ebs: validated.why_join_ebs,
+      what_can_you_contribute: validated.what_can_you_contribute,
+      weekly_hours_commitment: validated.weekly_hours_commitment,
+      comfortable_with_team: validated.comfortable_with_team,
+    });
+
+    const aiNotes = `[AI Evaluation — ${aiResult.model_used}]\n${aiResult.ai_summary}\n\nStrengths:\n• ${aiResult.strengths.join('\n• ')}\n\nFlags:\n• ${aiResult.flags.length ? aiResult.flags.join('\n• ') : 'None'}`;
+
     const payload = {
       full_name: validated.full_name,
       email: validated.email,
@@ -131,6 +153,20 @@ export async function submitTeamApplication(
       comfortable_with_team: validated.comfortable_with_team,
       anything_else: validated.anything_else || null,
       application_status: 'new',
+      application_score: aiResult.total_score,
+      score_experience: aiResult.score_experience,
+      score_accomplishment: aiResult.score_accomplishment,
+      score_initiative: aiResult.score_initiative,
+      score_commitment: aiResult.score_commitment,
+      score_vision: aiResult.score_vision,
+      score_communication: aiResult.score_communication,
+      evidence_levels: {
+        experience: aiResult.evidence_level_experience,
+        accomplishment: aiResult.evidence_level_accomplishment,
+      },
+      application_classification: aiResult.classification,
+      application_score_breakdown: aiResult,
+      reviewer_notes: aiNotes,
     };
 
     const { data, error } = await admin

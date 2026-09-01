@@ -159,6 +159,45 @@ export default function AdminApplicationsPage() {
     setS2Status(candidate.application_status || 'interview');
   };
 
+  // AI Evaluation State
+  const [runningAIEval, setRunningAIEval] = useState(false);
+
+  const handleTriggerAIEval = async () => {
+    if (!selectedCandidate) return;
+    setRunningAIEval(true);
+    setActionSuccess(null);
+    try {
+      const res = await fetch(`/api/admin/applications/${selectedCandidate.id}/auto-evaluate`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to run AI evaluation');
+
+      const ai = data.ai_result;
+      if (ai) {
+        setS1Exp(ai.score_experience);
+        setS1Acc(ai.score_accomplishment);
+        setS1Init(ai.score_initiative);
+        setS1Com(ai.score_commitment);
+        setS1Vis(ai.score_vision);
+        setS1Clar(ai.score_communication);
+        setS1EvExp(ai.evidence_level_experience);
+        setS1EvAcc(ai.evidence_level_accomplishment);
+        setS1Notes(
+          `[AI Evaluation — ${ai.model_used}]\n${ai.ai_summary}\n\nStrengths:\n• ${ai.strengths.join('\n• ')}\n\nFlags:\n• ${ai.flags.length ? ai.flags.join('\n• ') : 'None'}`
+        );
+      }
+
+      setSelectedCandidate(data.application);
+      setActionSuccess('AI Candidate Evaluation Completed & Scores Pre-Filled!');
+      loadApplications();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Error running AI evaluation');
+    } finally {
+      setRunningAIEval(false);
+    }
+  };
+
   const handleSaveStage1 = async () => {
     if (!selectedCandidate) return;
     setSavingEvaluation(true);
@@ -700,19 +739,113 @@ export default function AdminApplicationsPage() {
               {/* ── TAB 2: STAGE 1 APPLICATION EVALUATION ── */}
               {activeModalTab === 'stage1' && (
                 <div className="space-y-5">
-                  {/* Score Live Summary */}
-                  <div className="p-4 rounded-2xl bg-[#1A2820] border border-[#243320] flex items-center justify-between">
+                  {/* Score Live Summary & AI Trigger */}
+                  <div className="p-4 rounded-2xl bg-[#1A2820] border border-[#243320] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <p className="text-[10px] text-[#6B9980] font-bold uppercase">Calculated Application Score</p>
+                      <p className="text-[10px] text-[#6B9980] font-bold uppercase">Application Evidence Score</p>
                       <p className="text-2xl font-black text-emerald-400">{calculatedAppScore} / 100</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[10px] text-[#6B9980] font-bold uppercase">Classification</p>
-                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300">
-                        {calculatedAppClass}
-                      </span>
+
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-[10px] text-[#6B9980] font-bold uppercase">Classification</p>
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300">
+                          {calculatedAppClass}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleTriggerAIEval}
+                        disabled={runningAIEval}
+                        className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all shadow-md shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{runningAIEval ? 'AI Evaluating...' : '⚡ Run AI Evaluation'}</span>
+                      </button>
                     </div>
                   </div>
+
+                  {/* AI Evidence Intelligence Card */}
+                  {selectedCandidate.application_score_breakdown && (
+                    <div className="bg-[#0D1812] border border-amber-500/30 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-amber-400 font-black text-xs uppercase tracking-wider">
+                          <Sparkles className="w-4 h-4" />
+                          <span>AI Evidence Intelligence &amp; Claim Analysis</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-[#6B9980]">
+                          {(selectedCandidate.application_score_breakdown as any)?.model_used || 'Gemini AI'}
+                        </span>
+                      </div>
+
+                      {/* Evidence Badges */}
+                      <div className="flex flex-wrap gap-2 text-[11px]">
+                        <span className="px-2.5 py-1 rounded-lg bg-[#1A2820] text-emerald-300 border border-[#243320] font-bold">
+                          Exp Evidence: {s1EvExp} ({EVIDENCE_LEVEL_DESCRIPTIONS[s1EvExp]?.split('(')[0]})
+                        </span>
+                        <span className="px-2.5 py-1 rounded-lg bg-[#1A2820] text-amber-300 border border-[#243320] font-bold">
+                          Accomplishment Evidence: {s1EvAcc} ({EVIDENCE_LEVEL_DESCRIPTIONS[s1EvAcc]?.split('(')[0]})
+                        </span>
+                      </div>
+
+                      {/* AI Summary */}
+                      {(selectedCandidate.application_score_breakdown as any)?.ai_summary && (
+                        <p className="text-xs text-slate-300 font-medium leading-relaxed bg-[#0A1410] p-3 rounded-xl border border-[#1D2B22]">
+                          {(selectedCandidate.application_score_breakdown as any)?.ai_summary}
+                        </p>
+                      )}
+
+                      {/* Strengths & Flags */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        {Array.isArray((selectedCandidate.application_score_breakdown as any)?.strengths) &&
+                          (selectedCandidate.application_score_breakdown as any).strengths.length > 0 && (
+                            <div className="bg-[#0A1410] p-3 rounded-xl border border-[#1D2B22] space-y-1">
+                              <p className="text-[10px] text-emerald-400 font-bold uppercase">Demonstrated Strengths</p>
+                              <ul className="space-y-1 text-slate-300 text-[11px]">
+                                {(selectedCandidate.application_score_breakdown as any).strengths.map((st: string, i: number) => (
+                                  <li key={i} className="flex items-start gap-1.5">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                                    <span>{st}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                        {Array.isArray((selectedCandidate.application_score_breakdown as any)?.flags) &&
+                          (selectedCandidate.application_score_breakdown as any).flags.length > 0 && (
+                            <div className="bg-[#0A1410] p-3 rounded-xl border border-[#1D2B22] space-y-1">
+                              <p className="text-[10px] text-amber-400 font-bold uppercase">Verification Flags</p>
+                              <ul className="space-y-1 text-slate-300 text-[11px]">
+                                {(selectedCandidate.application_score_breakdown as any).flags.map((fl: string, i: number) => (
+                                  <li key={i} className="flex items-start gap-1.5">
+                                    <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                                    <span>{fl}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                      </div>
+
+                      {/* Suggested Probing Interview Questions */}
+                      {Array.isArray((selectedCandidate.application_score_breakdown as any)?.suggested_interview_questions) &&
+                        (selectedCandidate.application_score_breakdown as any).suggested_interview_questions.length > 0 && (
+                          <div className="bg-[#0A1410] p-3 rounded-xl border border-[#1D2B22] space-y-1">
+                            <p className="text-[10px] text-blue-400 font-bold uppercase">Suggested Interview Probing Questions</p>
+                            <ul className="space-y-1 text-slate-300 text-[11px]">
+                              {(selectedCandidate.application_score_breakdown as any).suggested_interview_questions.map((q: string, i: number) => (
+                                <li key={i} className="flex items-start gap-1.5">
+                                  <ChevronRight className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                                  <span>{q}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                    </div>
+                  )}
 
                   {/* 6 Category Score Inputs */}
                   <div className="space-y-4">
