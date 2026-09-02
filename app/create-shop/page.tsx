@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { trackEvent } from '@/lib/telemetry';
-import { getSession } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
+import { getCurrentUser } from '@/lib/auth';
 import { ImageUpload } from '@/components/ui/ImageUpload';
-import { ArrowLeft, CheckCircle2, Store, Plus, Info } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Store, Plus, Info, AlertCircle } from 'lucide-react';
 
 export default function CreateShopPage() {
   const [name, setName] = useState('');
@@ -15,6 +16,7 @@ export default function CreateShopPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [existingShopId, setExistingShopId] = useState<string | null>(null);
 
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdShop, setCreatedShop] = useState<{ id: string; name: string; slug: string } | null>(null);
@@ -22,12 +24,25 @@ export default function CreateShopPage() {
   useEffect(() => {
     async function checkExisting() {
       try {
-        const { session } = await getSession();
-        if (!session?.access_token) return;
+        const { user } = await getCurrentUser();
+        if (!user) {
+          setIsAuthenticated(false);
+          return;
+        }
+        setIsAuthenticated(true);
 
-        const res = await fetch('/api/shops?owner=true', {
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
-        });
+        let { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          const { data: refreshData } = await supabase.auth.refreshSession();
+          session = refreshData.session;
+        }
+
+        const headers: Record<string, string> = {};
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+
+        const res = await fetch('/api/shops?owner=true', { headers });
         if (res.ok) {
           const data = await res.json();
           if (data.shops && data.shops.length > 0) {
@@ -40,7 +55,9 @@ export default function CreateShopPage() {
             setExistingShopId(first.id);
           }
         }
-      } catch {}
+      } catch (err) {
+        console.warn('[CREATE_SHOP] Check existing shop failed:', err);
+      }
     }
     checkExisting();
   }, []);
@@ -57,38 +74,74 @@ export default function CreateShopPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const trimmedName = name.trim();
+    const cleanSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+
+    if (trimmedName.length < 2) {
+      setError('Store name must be at least 2 characters long.');
+      return;
+    }
+
+    if (cleanSlug.length < 2) {
+      setError('Store URL slug must be at least 2 characters long (letters, numbers, and hyphens).');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const { session } = await getSession();
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      let { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        const { data: refreshData } = await supabase.auth.refreshSession();
+        session = refreshData.session;
       }
+
+      if (!session?.access_token) {
+        setError('Authentication required. Please Sign In to register your campus storefront.');
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      };
 
       const res = await fetch('/api/shops', {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          name,
-          slug,
-          description,
-          location,
-          logo_url: logoUrl,
+          name: trimmedName,
+          slug: cleanSlug,
+          description: description.trim() || undefined,
+          location: location.trim() || 'UNEC Campus, Enugu',
+          logo_url: logoUrl || undefined,
         }),
       });
-      const data = await res.json();
+
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
 
       if (res.status === 401) {
-        setError('Authentication required. Please Sign In to register your campus storefront.');
+        setError('Authentication session expired. Please Sign In again.');
+        setIsAuthenticated(false);
       } else if (!res.ok) {
-        setError(data.error || 'Failed to create shop');
-      } else {
+        setError(data.error || data.message || `Failed to create shop (Status ${res.status})`);
+      } else if (data.shop) {
         setCreatedShop(data.shop);
-        trackEvent('shop_created', { shop_id: data.shop.id, slug: data.shop.slug });
+        trackEvent('shop_created', { shop_id: data.shop.id, slug: data.shop.slug }).catch(() => {});
+      } else {
+        setError('Unexpected response from server. Please refresh and try again.');
       }
-    } catch {
-      setError('Connection error while creating shop');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Network error while creating shop. Please check your connection and try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -173,12 +226,24 @@ export default function CreateShopPage() {
                 </div>
               )}
 
+              {isAuthenticated === false && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Sign in to your account to register and manage your campus storefront.</span>
+                  </div>
+                  <Link href="/auth?redirect=/create-shop" className="bg-[#087443] hover:bg-[#065f37] text-white font-bold text-[11px] px-3 py-1.5 rounded-lg whitespace-nowrap">
+                    Sign In
+                  </Link>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 
                 {error && (
                   <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-xl flex items-center justify-between gap-2">
                     <span>{error}</span>
-                    {error.includes('Sign In') && (
+                    {(error.includes('Sign In') || error.includes('Authentication')) && (
                       <Link href="/auth?redirect=/create-shop" className="bg-[#087443] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
                         Sign In Now
                       </Link>

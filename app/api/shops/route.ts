@@ -152,10 +152,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, shop }, { status: 201 });
   } catch (err: unknown) {
-    if (err && typeof err === 'object' && 'errors' in err) {
-      return NextResponse.json({ error: 'Validation Error', details: (err as { errors: unknown }).errors }, { status: 400 });
+    if (err && typeof err === 'object' && 'errors' in err && Array.isArray((err as any).errors)) {
+      const messages = (err as any).errors.map((e: any) => e.message).filter(Boolean);
+      const formattedError = messages.length > 0 ? messages.join('. ') : 'Validation Error';
+      return NextResponse.json({ error: formattedError, details: (err as any).errors }, { status: 400 });
     }
     const msg = err instanceof Error ? err.message : 'Server Error';
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
+
