@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductActions } from '@/components/product/ProductActions';
@@ -10,7 +9,7 @@ import { ProductHighlights } from '@/components/product/ProductHighlights';
 import { ReportModal } from '@/components/marketplace/ReportModal';
 import { trackEvent } from '@/lib/telemetry';
 import {
-  ChevronRight, ArrowLeft, ShieldCheck, Flag,
+  ChevronRight, ArrowLeft, Flag,
 } from 'lucide-react';
 
 interface ProductDetail {
@@ -39,7 +38,6 @@ interface ProductDetail {
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,23 +52,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         const res = await fetch(`/api/products/${encodeURIComponent(id)}`);
         if (!res.ok) {
           if (res.status === 404) {
-            // Fallback demo product for rich preview
-            setProduct({
-              id,
-              name: 'iPhone 14 Pro Max (256GB • Deep Purple)',
-              description: 'Factory unlocked pristine condition Apple iPhone 14 Pro Max. Battery health 98%, includes original fast charger and tempered glass pre-installed. Inspected and backed by Kingsok Gadgets 1-year merchant warranty.',
-              price: 980000,
-              condition: 'Brand New (Sealed)',
-              location: 'UNN Main Campus, Nsukka',
-              images: [],
-              shops: {
-                id: 'shop_1',
-                name: 'Kingsok Gadgets',
-                slug: 'kingsok-gadgets',
-                location: 'UNN Main Campus, Nsukka',
-                is_verified: true,
-              },
-            });
+            setError('This product listing could not be found. It may have been removed or sold.');
             setLoading(false);
             return;
           }
@@ -99,6 +81,34 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     <div className="min-h-screen bg-[#F8FAF9]">
       <Navbar />
 
+      {/* Loading State */}
+      {loading && (
+        <main className="max-w-7xl mx-auto px-4 sm:px-8 py-12">
+          <div className="flex items-center justify-center py-20">
+            <div className="w-8 h-8 border-2 border-[#087443] border-t-transparent rounded-full animate-spin" />
+          </div>
+        </main>
+      )}
+
+      {/* Error / Not Found State */}
+      {!loading && error && (
+        <main className="max-w-7xl mx-auto px-4 sm:px-8 py-12 text-center space-y-4">
+          <p className="text-2xl font-bold text-[#0D1F17]">Product Not Found</p>
+          <p className="text-sm text-[#6B7C74]">{error}</p>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <Link
+              href="/browse"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#087443] text-white text-sm font-bold rounded-xl hover:bg-[#053D24] transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Browse
+            </Link>
+          </div>
+        </main>
+      )}
+
+      {/* Product Detail */}
+      {!loading && !error && product && (
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Breadcrumb Navigation */}
         <nav className="flex items-center gap-2 text-xs text-[#6B7C74] flex-wrap">
@@ -129,18 +139,20 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
           {/* Right: Product Details, Pricing, CTAs & Guarantees */}
           <div>
-            <ProductActions
-              productId={id}
-              name={product?.name || 'iPhone 14 Pro Max'}
-              price={product?.price || 980000}
-              originalPrice={product?.price ? Math.round(product.price * 1.1) : 1050000}
-              inStock={true}
-              storeName={product?.shops?.name || 'Kingsok Gadgets'}
-              storeSlug={product?.shops?.slug || 'kingsok-gadgets'}
-              storeRating={4.8}
-              storeReviews={256}
-              isVerified={product?.shops?.is_verified ?? true}
-            />
+            {product && (
+              <ProductActions
+                productId={id}
+                name={product.name}
+                price={product.price}
+                originalPrice={Math.round(product.price * 1.1)}
+                inStock={true}
+                storeName={product.shops?.name ?? ''}
+                storeSlug={product.shops?.slug ?? ''}
+                storeRating={4.8}
+                storeReviews={0}
+                isVerified={product.shops?.is_verified ?? false}
+              />
+            )}
           </div>
         </div>
 
@@ -164,6 +176,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           </button>
         </div>
       </main>
+      )}
 
       {/* Report Modal */}
       {product && (

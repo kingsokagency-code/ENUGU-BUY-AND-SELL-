@@ -38,7 +38,7 @@ export async function GET(
 
     const { data: product, error } = await supabase
       .from('products')
-      .select('*, shops(*, profiles!inner(id, full_name, avatar_url, is_verified))')
+      .select('*, shops(*, profiles(id, full_name, avatar_url, is_verified))')
       .eq('id', id)
       .single();
 

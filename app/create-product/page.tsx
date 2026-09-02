@@ -73,8 +73,8 @@ function CreateProductForm() {
     }
 
     const numPrice = parseFloat(price);
-    if (isNaN(numPrice) || numPrice < 0) {
-      setError('Please enter a valid non-negative price.');
+    if (isNaN(numPrice) || numPrice <= 0) {
+      setError('Please enter a valid price greater than ₦0.');
       return;
     }
 
@@ -320,29 +320,10 @@ function CreateProductForm() {
                     onChange={(e) => setCondition(e.target.value)}
                     className="w-full bg-[#FAFAF8] border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 rounded-xl px-3.5 py-3 outline-none focus:border-[#087443]"
                   >
-                    <option value="Brand New">Brand New</option>
+                    <option value="New">Brand New</option>
                     <option value="Used">Used (Good Condition)</option>
                     <option value="Refurbished">Refurbished / Open Box</option>
                   </select>
-                </div>
-
-                {/* Image Upload Box Matching Reference Screenshot */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                    Product Images
-                  </label>
-                  <div className="border-2 border-dashed border-slate-200 hover:border-[#087443]/50 bg-[#FAFAF8] rounded-2xl p-8 text-center space-y-2 transition-colors cursor-pointer group">
-                    <div className="w-12 h-12 rounded-2xl bg-[#E8F5EF] text-[#087443] flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
-                      <Package className="w-6 h-6 text-[#087443]" />
-                    </div>
-                    <div className="font-bold text-xs text-slate-800">
-                      Upload Images
-                    </div>
-                    <p className="text-[11px] text-slate-400">
-                      Drag &amp; drop or click to upload <br />
-                      PNG, JPG up to 5MB
-                    </p>
-                  </div>
                 </div>
 
                 {/* Description */}
