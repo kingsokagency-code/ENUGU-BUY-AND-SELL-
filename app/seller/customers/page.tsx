@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SellerSidebar } from '@/components/seller/SellerSidebar';
-import { MobileSellerNav } from '@/components/seller/MobileBottomNav';
 import {
   Users, Search, ShieldCheck, MapPin, Phone,
   MessageSquare, Edit3, CheckCircle2, AlertCircle,
@@ -390,8 +389,6 @@ export default function SellerCustomersPage() {
           </div>
         </div>
       )}
-
-      <MobileSellerNav />
     </div>
   );
 }

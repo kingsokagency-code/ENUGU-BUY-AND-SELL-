@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SellerSidebar } from '@/components/seller/SellerSidebar';
-import { MobileSellerNav } from '@/components/seller/MobileBottomNav';
 import {
   Boxes, Plus, Minus, CheckCircle2, AlertCircle,
   Package, Search, RefreshCw, ArrowLeft, ArrowUpRight
@@ -345,8 +344,6 @@ export default function SellerInventoryPage() {
           )}
         </main>
       </div>
-
-      <MobileSellerNav />
     </div>
   );
 }

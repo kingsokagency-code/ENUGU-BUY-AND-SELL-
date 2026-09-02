@@ -35,7 +35,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('shops')
-      .select('*, profiles!inner(full_name, avatar_url, is_verified)')
+      .select('*, profiles(full_name, avatar_url, is_verified)')
       .order('created_at', { ascending: false })
       .limit(40);
 

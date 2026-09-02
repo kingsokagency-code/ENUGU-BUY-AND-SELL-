@@ -22,14 +22,14 @@ interface StoreHeroProps {
 }
 
 export function StoreHero({
-  name = 'Kingsok Gadgets',
-  category = 'Electronics · Phones · Accessories',
-  description = 'Your #1 certified electronics & gadgets vendor in Enugu. 100% original devices guaranteed.',
+  name = 'Campus Store',
+  category = 'Campus Merchant',
+  description,
   rating = 4.8,
-  reviewsCount = 2315,
-  followersCount = 1245,
-  isVerified = true,
-  location = 'UNN Main Campus, Nsukka',
+  reviewsCount = 0,
+  followersCount = 0,
+  isVerified = false,
+  location,
   slug = 'store',
   featuredProductId,
 }: StoreHeroProps) {

@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SellerSidebar } from '@/components/seller/SellerSidebar';
-import { MobileSellerNav } from '@/components/seller/MobileBottomNav';
 import {
   Settings, Store, ShieldCheck, MapPin, Globe,
   CheckCircle2, AlertCircle, ExternalLink, ArrowLeft,
@@ -247,8 +246,6 @@ export default function SellerSettingsPage() {
           </div>
         </main>
       </div>
-
-      <MobileSellerNav />
     </div>
   );
 }

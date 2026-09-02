@@ -41,14 +41,6 @@ interface Product {
   images?: string[];
 }
 
-const DEMO_FALLBACK_PRODUCTS: ProductCardData[] = [
-  { id: '1', name: 'iPhone 14 Pro Max 256GB Deep Purple', price: 980000, originalPrice: 1050000, rating: 4.9, reviewCount: 128, seller: { name: 'Kingsok Gadgets', slug: 'kingsok-gadgets', is_verified: true } },
-  { id: '2', name: 'Samsung Galaxy S23 Ultra 512GB', price: 720000, originalPrice: 800000, rating: 4.8, reviewCount: 84, seller: { name: 'Kingsok Gadgets', slug: 'kingsok-gadgets', is_verified: true } },
-  { id: '3', name: 'MacBook Air M2 8GB/256GB Space Gray', price: 1250000, originalPrice: 1350000, rating: 5.0, reviewCount: 42, seller: { name: 'Kingsok Gadgets', slug: 'kingsok-gadgets', is_verified: true } },
-  { id: '4', name: 'AirPods Pro 2nd Gen with MagSafe', price: 180000, originalPrice: 220000, rating: 4.7, reviewCount: 95, seller: { name: 'Kingsok Gadgets', slug: 'kingsok-gadgets', is_verified: true } },
-  { id: '5', name: 'Apple Watch Series 8 GPS 45mm', price: 450000, originalPrice: 500000, rating: 4.8, reviewCount: 31, seller: { name: 'Kingsok Gadgets', slug: 'kingsok-gadgets', is_verified: true } },
-];
-
 export default function ShopDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
 
@@ -69,17 +61,7 @@ export default function ShopDetailPage({ params }: { params: Promise<{ slug: str
         const res = await fetch(`/api/shops/${encodeURIComponent(slug)}`);
         if (!res.ok) {
           if (res.status === 404) {
-            // Demo fallback if shop not found in database
-            setShop({
-              id: 'demo_shop_1',
-              name: slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-              slug,
-              description: 'Official verified student and merchant storefront on Enugu Buy & Sell. Fast campus delivery and certified authentic products.',
-              location: 'UNN Main Campus, Nsukka',
-              is_verified: true,
-              created_at: new Date().toISOString(),
-            });
-            setProducts([]);
+            setError('This campus storefront could not be found.');
             setLoading(false);
             return;
           }
@@ -113,17 +95,15 @@ export default function ShopDetailPage({ params }: { params: Promise<{ slug: str
     }
   };
 
-  const displayProducts: ProductCardData[] = products.length > 0
-    ? products.map(p => ({
-        id: p.id,
-        name: p.name,
-        price: p.price,
-        images: p.images,
-        condition: p.condition,
-        location: p.location,
-        seller: { name: shop?.name || 'Store', slug, is_verified: shop?.is_verified },
-      }))
-    : DEMO_FALLBACK_PRODUCTS;
+  const displayProducts: ProductCardData[] = products.map(p => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    images: p.images,
+    condition: p.condition,
+    location: p.location,
+    seller: { name: shop?.name || 'Store', slug, is_verified: shop?.is_verified },
+  }));
 
   const filteredProducts = displayProducts.filter(p =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -133,24 +113,58 @@ export default function ShopDetailPage({ params }: { params: Promise<{ slug: str
     <div className="min-h-screen bg-[#F8FAF9]">
       <Navbar />
 
-      {/* Store Hero Banner */}
-      <StoreHero
-        id={shop?.id}
-        name={shop?.name || 'Kingsok Gadgets'}
-        category="Electronics · Phones · Accessories"
-        description={shop?.description}
-        location={shop?.location}
-        isVerified={shop?.is_verified ?? true}
-        slug={slug}
-        featuredProductId={products[0]?.id}
-      />
+      {/* Loading State */}
+      {loading && (
+        <main className="max-w-7xl mx-auto px-4 sm:px-8 py-16 flex items-center justify-center">
+          <div className="text-center space-y-3">
+            <div className="w-10 h-10 border-3 border-[#087443] border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs font-bold text-slate-600">Loading campus storefront...</p>
+          </div>
+        </main>
+      )}
 
-      {/* Sticky Tab Navigation */}
-      <StoreTabNav
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        productsCount={filteredProducts.length}
-      />
+      {/* Error / Not Found State */}
+      {!loading && error && (
+        <main className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
+          <div className="w-14 h-14 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto">
+            <Package className="w-8 h-8" />
+          </div>
+          <h1 className="text-lg font-bold text-slate-900">Storefront Not Found</h1>
+          <p className="text-xs text-slate-500">{error}</p>
+          <div className="pt-2">
+            <Link
+              href="/shops"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#087443] text-white text-xs font-bold rounded-xl hover:bg-[#053D24] transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Browse All Stores</span>
+            </Link>
+          </div>
+        </main>
+      )}
+
+      {/* Storefront Content */}
+      {!loading && !error && shop && (
+        <>
+          {/* Store Hero Banner */}
+          <StoreHero
+            id={shop.id}
+            name={shop.name}
+            category="Campus Merchant Storefront"
+            description={shop.description}
+            location={shop.location}
+            isVerified={shop.is_verified ?? false}
+            slug={slug}
+            featuredProductId={products[0]?.id}
+          />
+
+          {/* Sticky Tab Navigation */}
+          <StoreTabNav
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            productsCount={filteredProducts.length}
+          />
+
 
       {/* Store Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8 space-y-8">
@@ -189,41 +203,51 @@ export default function ShopDetailPage({ params }: { params: Promise<{ slug: str
         {/* Tab 1: Store Home & Featured Products */}
         {activeTab === 'home' && (
           <div className="space-y-8">
-            {/* Featured Products Section */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
+            {filteredProducts.length === 0 ? (
+              <EmptyState
+                icon={<Package className="w-12 h-12 text-[#9CB3AA]" />}
+                title="No products listed yet"
+                description="This merchant has not added any products to their store yet. Check back soon!"
+              />
+            ) : (
+              <>
+                {/* Featured Products Section */}
                 <div>
-                  <h2 className="text-base font-bold text-[#0D1F17]">Featured Products</h2>
-                  <p className="text-xs text-[#6B7C74]">Top recommendations from this merchant</p>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-base font-bold text-[#0D1F17]">Featured Products</h2>
+                      <p className="text-xs text-[#6B7C74]">Top recommendations from this merchant</p>
+                    </div>
+                    <button onClick={() => setActiveTab('products')} className="text-xs font-bold text-[#087443] hover:underline">
+                      View all ({filteredProducts.length}) →
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                    {filteredProducts.slice(0, 5).map((p) => (
+                      <ProductCard key={p.id} product={p} />
+                    ))}
+                  </div>
                 </div>
-                <button onClick={() => setActiveTab('products')} className="text-xs font-bold text-[#087443] hover:underline">
-                  View all ({filteredProducts.length}) →
-                </button>
-              </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
-                {filteredProducts.slice(0, 5).map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
-            </div>
+                {/* 4-Pillar Trust Bar */}
+                <StoreTrustBar />
 
-            {/* 4-Pillar Trust Bar */}
-            <StoreTrustBar />
+                {/* All Store Inventory Preview */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-base font-bold text-[#0D1F17]">All Products</h2>
+                    <span className="text-xs text-[#6B7C74]">{filteredProducts.length} items available</span>
+                  </div>
 
-            {/* All Store Inventory Preview */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-bold text-[#0D1F17]">All Products</h2>
-                <span className="text-xs text-[#6B7C74]">{filteredProducts.length} items available</span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
-                {filteredProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
-            </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                    {filteredProducts.map((p) => (
+                      <ProductCard key={p.id} product={p} />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -307,6 +331,8 @@ export default function ShopDetailPage({ params }: { params: Promise<{ slug: str
           </div>
         )}
       </main>
+        </>
+      )}
 
       {/* Report Store Modal */}
       {shop && (

@@ -23,7 +23,7 @@ export async function GET(
 
     let query = supabase
       .from('shops')
-      .select('*, profiles!inner(id, full_name, avatar_url, is_verified)');
+      .select('*, profiles(id, full_name, avatar_url, is_verified)');
 
     if (isUUID) {
       query = query.eq('id', slug);

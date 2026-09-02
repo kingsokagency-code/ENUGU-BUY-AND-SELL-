@@ -12,9 +12,9 @@ export function MobileSellerNav() {
 
   const items = [
     { href: '/seller/dashboard', label: 'Home',    icon: <LayoutDashboard className="w-5 h-5" /> },
-    { href: '/seller/orders',    label: 'Orders',  icon: <ShoppingBag     className="w-5 h-5" />, badge: 6 },
+    { href: '/seller/orders',    label: 'Orders',  icon: <ShoppingBag     className="w-5 h-5" /> },
     { href: '/create-product',   label: 'Add',     icon: <Plus            className="w-6 h-6" />, isCenter: true },
-    { href: '/conversations',    label: 'Inbox',   icon: <Inbox            className="w-5 h-5" />, badge: 1 },
+    { href: '/conversations',    label: 'Inbox',   icon: <Inbox            className="w-5 h-5" /> },
     { href: '/seller/settings',  label: 'More',    icon: <MoreHorizontal  className="w-5 h-5" /> },
   ];
 
@@ -51,11 +51,6 @@ export function MobileSellerNav() {
             >
               <span className="relative">
                 {item.icon}
-                {item.badge && item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
-                    {item.badge}
-                  </span>
-                )}
               </span>
               <span className="text-[10px] font-semibold">{item.label}</span>
             </Link>

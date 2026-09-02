@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { SellerSidebar } from '@/components/seller/SellerSidebar';
 import { SellerKPIGrid } from '@/components/seller/SellerKPIGrid';
 import { RecentOrdersTable } from '@/components/seller/RecentOrdersTable';
-import { MobileSellerNav } from '@/components/seller/MobileBottomNav';
 import {
   ShieldCheck, ExternalLink, Plus, Package,
   TrendingUp, Users, ShoppingBag, Store,
@@ -199,9 +198,6 @@ export default function SellerDashboardPage() {
           </div>
         </main>
       </div>
-
-      {/* Mobile Navigation */}
-      <MobileSellerNav />
     </div>
   );
 }

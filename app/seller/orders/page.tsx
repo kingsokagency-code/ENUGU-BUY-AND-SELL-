@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SellerSidebar } from '@/components/seller/SellerSidebar';
-import { MobileSellerNav } from '@/components/seller/MobileBottomNav';
 import {
   ShoppingBag, CheckCircle2, Clock, MapPin,
   Phone, ArrowLeft, AlertCircle, ChevronDown, Package,
@@ -321,8 +320,6 @@ export default function SellerOrdersPage() {
           )}
         </main>
       </div>
-
-      <MobileSellerNav />
     </div>
   );
 }
